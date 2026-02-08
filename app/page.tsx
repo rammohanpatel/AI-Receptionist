@@ -20,23 +20,18 @@ export default function Home() {
     type: NotificationType;
   } | null>(null);
   const [countdown, setCountdown] = useState<number | undefined>(undefined);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasInteractedRef = useRef(false);
+  const hasGreetedRef = useRef(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoStreamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-    // Initialize with greeting (text only, audio will play on first interaction)
-    if (messages.length === 0) {
-      setTimeout(() => {
-        addMessage(
-          'Hello! Welcome to our office. How may I help you today?',
-          'assistant'
-        );
-      }, 500);
-    }
-  }, []);
+  // Removed auto-greeting - now triggered by Start button
 
   const showNotification = (message: string, type: NotificationType = 'info') => {
     setNotification({ message, type });
@@ -50,11 +45,99 @@ export default function Home() {
     ]);
   };
 
+  const startCamera = async () => {
+    try {
+      console.log('Requesting camera access...');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 }, 
+          height: { ideal: 480 },
+          facingMode: 'user'
+        } 
+      });
+      console.log('Camera stream obtained:', stream);
+      console.log('Video tracks:', stream.getVideoTracks());
+      
+      videoStreamRef.current = stream;
+      setIsCameraActive(true);
+      
+      // Wait a bit for state to update, then set video source
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      if (videoRef.current) {
+        console.log('Setting video srcObject');
+        videoRef.current.srcObject = stream;
+        // Force play the video
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          videoRef.current?.play().catch(err => console.error('Video play error:', err));
+        };
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      showNotification('Could not access camera. Continuing without video.', 'info');
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoStreamRef.current) {
+      videoStreamRef.current.getTracks().forEach((track) => track.stop());
+      videoStreamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  // Play greeting audio with text message
+  const playGreetingAudio = async () => {
+    if (!hasGreetedRef.current) {
+      hasGreetedRef.current = true;
+      const greetingText = 'Hello! Welcome to our office. How may I help you today?';
+      
+      // Add greeting message to conversation
+      addMessage(greetingText, 'assistant');
+      
+      try {
+        const ttsResponse = await fetch('/api/text-to-speech', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: greetingText }),
+        });
+
+        if (ttsResponse.ok) {
+          const audioBlob = await ttsResponse.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
+          audio.onended = () => URL.revokeObjectURL(audioUrl);
+          await audio.play().catch(() => {
+            // Silently fail if autoplay is still blocked
+            URL.revokeObjectURL(audioUrl);
+          });
+        } else {
+          console.log('TTS service unavailable - text will be displayed only');
+        }
+      } catch (error) {
+        console.log('Could not play greeting audio - continuing without voice');
+      }
+    }
+  };
+
+  // Handle Start button click
+  const handleStart = async () => {
+    setHasStarted(true);
+    hasInteractedRef.current = true;
+    
+    // Start camera
+    await startCamera();
+    
+    // Play greeting
+    await playGreetingAudio();
+  };
+
   const startListening = async () => {
     try {
-      // Mark that user has interacted
-      hasInteractedRef.current = true;
-      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -87,6 +170,7 @@ export default function Home() {
       setIsListening(false);
       setConversationState('thinking');
       setIsProcessing(true);
+      // Keep camera running - don't stop it
     }
   };
 
@@ -189,17 +273,19 @@ export default function Home() {
           } catch (playError: any) {
             if (playError.name === 'NotAllowedError') {
               console.log('Audio autoplay blocked - this will work after user interaction');
-              // Set state back to idle, audio will play on next user interaction
               setConversationState('idle');
             } else {
               throw playError;
             }
           }
         } else {
+          // TTS failed, but we already showed the text - just go back to idle
+          console.log('TTS service unavailable - showing text only');
           setConversationState('idle');
         }
       } catch (error) {
         console.error('Text-to-speech error:', error);
+        // Even if TTS fails, the text message is already displayed
         setConversationState('idle');
       }
     }
@@ -257,6 +343,28 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+      {/* Camera Video - Top Left */}
+      {isCameraActive && (
+        <div className="fixed top-4 left-4 z-[9999] rounded-xl overflow-hidden shadow-2xl border-4 border-blue-500 bg-gray-900">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-80 h-60 object-cover"
+            onLoadedMetadata={(e) => {
+              console.log('Video element loaded metadata');
+              const video = e.currentTarget;
+              video.play().catch(err => console.error('Play failed:', err));
+            }}
+          />
+          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center space-x-2 shadow-lg">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            <span>LIVE</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-5xl font-bold text-gray-900 mb-2">
@@ -276,13 +384,46 @@ export default function Home() {
 
         {/* Controls */}
         {!isCallActive && (
-          <Controls
-            isListening={isListening}
-            isProcessing={isProcessing}
-            onStartListening={startListening}
-            onStopListening={stopListening}
-            disabled={conversationState === 'calling'}
-          />
+          <>
+            {!hasStarted ? (
+              <div className="flex justify-center mb-8">
+                <button
+                  onClick={handleStart}
+                  className="group relative inline-flex items-center justify-center px-12 py-6 text-xl font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-full shadow-2xl hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                >
+                  <svg 
+                    className="w-8 h-8 mr-3" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" 
+                    />
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                    />
+                  </svg>
+                  Start Receptionist
+                  <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-200"></span>
+                </button>
+              </div>
+            ) : (
+              <Controls
+                isListening={isListening}
+                isProcessing={isProcessing}
+                onStartListening={startListening}
+                onStopListening={stopListening}
+                disabled={conversationState === 'calling'}
+              />
+            )}
+          </>
         )}
 
         {/* Countdown Display */}
@@ -299,7 +440,7 @@ export default function Home() {
         <ConversationHistory messages={messages} />
 
         {/* Features Info */}
-        {messages.length <= 1 && (
+        {!hasStarted && (
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="bg-white p-6 rounded-xl shadow-md text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
