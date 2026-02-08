@@ -43,8 +43,67 @@ export default function Avatar({ state, isThinking }: AvatarProps) {
     <div className="flex flex-col items-center space-y-6">
       {/* Avatar Circle with Animation */}
       <div className="relative">
-        {/* Pulse rings for active states */}
-        {(state === 'listening' || state === 'speaking') && (
+        {/* Enhanced Pulse rings for speaking - Multiple layers */}
+        {state === 'speaking' && (
+          <>
+            {/* Gold expanding rings */}
+            <motion.div
+              className="absolute inset-0 rounded-full border-4 border-[#D4AF37]"
+              animate={{
+                scale: [1, 1.8],
+                opacity: [0.6, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeOut',
+              }}
+            />
+            <motion.div
+              className="absolute inset-0 rounded-full border-4 border-[#F0C852]"
+              animate={{
+                scale: [1, 1.8],
+                opacity: [0.6, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeOut',
+                delay: 0.3,
+              }}
+            />
+            <motion.div
+              className="absolute inset-0 rounded-full border-4 border-[#D4AF37]"
+              animate={{
+                scale: [1, 1.8],
+                opacity: [0.6, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: 'easeOut',
+                delay: 0.6,
+              }}
+            />
+            
+            {/* Pulsing glow */}
+            <motion.div
+              className="absolute -inset-4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F0C852] blur-2xl"
+              animate={{
+                opacity: [0.3, 0.6, 0.3],
+                scale: [0.95, 1.05, 0.95],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+          </>
+        )}
+
+        {/* Pulse rings for listening state */}
+        {state === 'listening' && (
           <>
             <motion.div
               className={`absolute inset-0 rounded-full ${getStateColor()} opacity-20`}
@@ -78,38 +137,68 @@ export default function Avatar({ state, isThinking }: AvatarProps) {
         <motion.div
           className={`relative w-48 h-48 rounded-full ${getStateColor()} flex items-center justify-center shadow-2xl`}
           animate={{
-            scale: state === 'speaking' ? [1, 1.05, 1] : 1,
+            scale: state === 'speaking' ? [1, 1.08, 1] : 1,
           }}
           transition={{
-            duration: 0.5,
+            duration: 0.8,
             repeat: state === 'speaking' ? Infinity : 0,
             ease: 'easeInOut',
           }}
         >
           {/* Avatar Image - AI Receptionist */}
-          <div className="relative w-full h-full rounded-full overflow-hidden">
-            <img
+          <motion.div 
+            className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#D4AF37]"
+            animate={{
+              borderColor: state === 'speaking' 
+                ? ['#D4AF37', '#F0C852', '#D4AF37'] 
+                : '#D4AF37',
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: state === 'speaking' ? Infinity : 0,
+              ease: 'easeInOut',
+            }}
+          >
+            <motion.img
               src="/ai-receptionist.png"
               alt="AI Receptionist"
               className="w-full h-full object-cover"
+              animate={{
+                scale: state === 'speaking' ? [1, 1.05, 1] : 1,
+              }}
+              transition={{
+                duration: 0.8,
+                repeat: state === 'speaking' ? Infinity : 0,
+                ease: 'easeInOut',
+              }}
             />
-            {/* Overlay for better visibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          </div>
+            {/* Dynamic overlay that pulses during speaking */}
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/30 to-transparent"
+              animate={{
+                opacity: state === 'speaking' ? [0.3, 0.6, 0.3] : 0.3,
+              }}
+              transition={{
+                duration: 1.2,
+                repeat: state === 'speaking' ? Infinity : 0,
+                ease: 'easeInOut',
+              }}
+            />
+          </motion.div>
 
-          {/* Speaking Animation - Sound Waves */}
+          {/* Speaking Animation - Enhanced Sound Wave Bars */}
           {state === 'speaking' && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="flex space-x-1">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="flex space-x-1.5">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <motion.div
                     key={i}
-                    className="w-1 bg-white rounded-full"
+                    className="w-2 bg-gradient-to-t from-[#D4AF37] to-[#F0C852] rounded-full shadow-lg"
                     animate={{
-                      height: ['10px', '30px', '10px'],
+                      height: ['12px', '40px', '12px'],
                     }}
                     transition={{
-                      duration: 0.8,
+                      duration: 0.6,
                       repeat: Infinity,
                       ease: 'easeInOut',
                       delay: i * 0.1,
@@ -140,8 +229,20 @@ export default function Avatar({ state, isThinking }: AvatarProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <p className="text-2xl font-semibold text-gray-800">{getStateLabel()}</p>
-        <p className="text-sm text-gray-500 mt-1">AI Receptionist</p>
+        <motion.p 
+          className="text-2xl font-semibold text-[#D4AF37] tracking-wide"
+          animate={{
+            scale: state === 'speaking' ? [1, 1.05, 1] : 1,
+          }}
+          transition={{
+            duration: 0.8,
+            repeat: state === 'speaking' ? Infinity : 0,
+            ease: 'easeInOut',
+          }}
+        >
+          {getStateLabel()}
+        </motion.p>
+        <p className="text-sm text-gray-400 mt-1 tracking-wider">Elite AI Assistant</p>
       </motion.div>
 
       {/* Visual Indicator for Listening */}

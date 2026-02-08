@@ -19,69 +19,88 @@ export default function Controls({
   disabled,
 }: ControlsProps) {
   return (
-    <div className="flex items-center justify-center space-x-4 mt-8">
-      {/* Main Microphone Button */}
+    <div className="flex flex-col items-center justify-center mt-12 relative z-10">
+      {/* Main Microphone Button - Luxury Style */}
       <motion.button
-        whileHover={{ scale: disabled ? 1 : 1.05 }}
-        whileTap={{ scale: disabled ? 1 : 0.95 }}
+        whileHover={{ scale: disabled ? 1 : 1.08 }}
+        whileTap={{ scale: disabled ? 1 : 0.92 }}
         onClick={isListening ? onStopListening : onStartListening}
         disabled={disabled || isProcessing}
-        className={`relative p-8 rounded-full shadow-2xl transition-all ${
+        className={`relative p-10 rounded-full shadow-2xl transition-all duration-300 border-4 ${
           isListening
-            ? 'bg-red-500 hover:bg-red-600'
-            : 'bg-blue-500 hover:bg-blue-600'
+            ? 'bg-gradient-to-br from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 border-red-400 shadow-[0_0_40px_rgba(239,68,68,0.5)]'
+            : 'bg-gradient-to-br from-[#D4AF37] to-[#C5A028] hover:from-[#F0C852] hover:to-[#D4AF37] border-[#F0C852] shadow-[0_0_40px_rgba(212,175,55,0.5)]'
         } ${disabled || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {isListening ? (
-          <MicOff className="w-12 h-12 text-white" />
+          <MicOff className="w-14 h-14 text-white drop-shadow-lg" />
         ) : (
-          <Mic className="w-12 h-12 text-white" />
+          <Mic className="w-14 h-14 text-[#0A0E27] drop-shadow-lg" />
         )}
 
-        {/* Pulse effect when listening */}
+        {/* Luxury Pulse effect when listening */}
         {isListening && (
           <>
             <motion.div
-              className="absolute inset-0 rounded-full bg-red-500 opacity-20"
+              className="absolute inset-0 rounded-full bg-red-500 border-2 border-red-400"
               animate={{
-                scale: [1, 1.5],
-                opacity: [0.2, 0],
+                scale: [1, 1.6],
+                opacity: [0.6, 0],
               }}
               transition={{
-                duration: 1.5,
+                duration: 2,
                 repeat: Infinity,
                 ease: 'easeOut',
               }}
             />
             <motion.div
-              className="absolute inset-0 rounded-full bg-red-500 opacity-20"
+              className="absolute inset-0 rounded-full bg-red-500 border-2 border-red-400"
               animate={{
-                scale: [1, 1.5],
-                opacity: [0.2, 0],
+                scale: [1, 1.6],
+                opacity: [0.6, 0],
               }}
               transition={{
-                duration: 1.5,
+                duration: 2,
                 repeat: Infinity,
                 ease: 'easeOut',
-                delay: 0.5,
+                delay: 1,
               }}
             />
           </>
         )}
+
+        {/* Idle glow effect */}
+        {!isListening && !disabled && !isProcessing && (
+          <motion.div
+            className="absolute inset-0 rounded-full bg-[#D4AF37]"
+            animate={{
+              scale: [1, 1.3],
+              opacity: [0.3, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        )}
       </motion.button>
 
-      {/* Status Text */}
-      <div className="text-center">
-        <p className="text-lg font-medium text-gray-700">
+      {/* Luxury Status Text */}
+      <div className="text-center mt-8">
+        <p className="text-2xl font-light text-[#D4AF37] tracking-wider mb-2">
           {isProcessing
-            ? 'Processing...'
+            ? 'Processing Request...'
             : isListening
-            ? 'Listening... (Click to stop)'
-            : 'Click to speak'}
+            ? 'Listening...'
+            : 'Ready to Assist'}
         </p>
-        <p className="text-sm text-gray-500 mt-1">
-          {isListening ? 'Speak naturally' : 'Press and speak your request'}
+        <p className="text-sm text-gray-400 font-light tracking-widest uppercase">
+          {isListening ? 'Click to conclude' : 'Click to speak'}
         </p>
+        
+        {/* Decorative divider */}
+        <div className="mt-4 w-32 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto"></div>
       </div>
     </div>
   );

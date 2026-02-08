@@ -342,10 +342,17 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+    <main className="min-h-screen bg-gradient-to-br from-[#050816] via-[#0A0E27] to-[#1E2749] py-12 px-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#D4AF37] opacity-10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#D4AF37] opacity-10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[#D4AF37] opacity-5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+
       {/* Camera Video - Top Left */}
       {isCameraActive && (
-        <div className="fixed top-4 left-4 z-[9999] rounded-xl overflow-hidden shadow-2xl border-4 border-blue-500 bg-gray-900">
+        <div className="fixed top-6 left-6 z-[9999] rounded-2xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#0A0E27] luxury-glow">
           <video
             ref={videoRef}
             autoPlay
@@ -358,20 +365,27 @@ export default function Home() {
               video.play().catch(err => console.error('Play failed:', err));
             }}
           />
-          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center space-x-2 shadow-lg">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            <span>LIVE</span>
+          <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold px-4 py-2 rounded-full flex items-center space-x-2 shadow-xl border border-red-400">
+            <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse shadow-lg" />
+            <span className="tracking-wider">LIVE</span>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-5xl font-bold text-gray-900 mb-2">
+      {/* Luxury Header with Gradient Text */}
+      <div className="text-center mb-16 relative z-10">
+        <div className="inline-block mb-4">
+          <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
+        </div>
+        <h1 className="text-7xl font-bold mb-4 text-luxury-gradient tracking-tight">
           AI Receptionist
         </h1>
-        <p className="text-xl text-gray-600">
-          Your intelligent workplace assistant
+        <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
+        <p className="text-2xl text-[#D4AF37] font-light tracking-wider">
+          Elite Virtual Concierge Experience
+        </p>
+        <p className="text-sm text-gray-400 mt-2 font-light tracking-widest uppercase">
+          Powered by Advanced AI
         </p>
       </div>
 
@@ -386,32 +400,21 @@ export default function Home() {
         {!isCallActive && (
           <>
             {!hasStarted ? (
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-12">
                 <button
                   onClick={handleStart}
-                  className="group relative inline-flex items-center justify-center px-12 py-6 text-xl font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-full shadow-2xl hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                  className="group relative inline-flex items-center justify-center px-16 py-7 text-2xl font-bold text-[#0A0E27] bg-gradient-to-r from-[#D4AF37] via-[#F0C852] to-[#D4AF37] rounded-full shadow-2xl hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-[#F0C852] overflow-hidden"
                 >
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#F0C852] via-[#D4AF37] to-[#F0C852] opacity-0 group-hover:opacity-100 transition-opacity duration-500 shimmer"></span>
                   <svg 
-                    className="w-8 h-8 mr-3" 
-                    fill="none" 
-                    stroke="currentColor" 
+                    className="w-10 h-10 mr-4 z-10" 
+                    fill="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" 
-                    />
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                    />
+                    <path d="M8 5v14l11-7z"/>
                   </svg>
-                  Start Receptionist
-                  <span className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-200"></span>
+                  <span className="z-10 tracking-wide">Initiate Experience</span>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-[#F0C852] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
                 </button>
               </div>
             ) : (
@@ -428,48 +431,48 @@ export default function Home() {
 
         {/* Countdown Display */}
         {countdown !== undefined && countdown > 0 && (
-          <div className="text-center mt-8">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-500 text-white text-4xl font-bold rounded-full shadow-lg animate-pulse">
+          <div className="text-center mt-12">
+            <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] text-[#0A0E27] text-5xl font-bold rounded-full shadow-2xl animate-pulse border-4 border-[#F0C852] luxury-glow">
               {countdown}
             </div>
-            <p className="mt-4 text-lg text-gray-700">Connecting to call...</p>
+            <p className="mt-6 text-xl text-[#D4AF37] font-light tracking-wider">Establishing Connection...</p>
           </div>
         )}
 
         {/* Conversation History */}
         <ConversationHistory messages={messages} />
 
-        {/* Features Info */}
+        {/* Features Info - Luxury Cards */}
         {!hasStarted && (
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="bg-white p-6 rounded-xl shadow-md text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative z-10">
+            <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
+                <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Voice Interaction</h3>
-              <p className="text-sm text-gray-600">Speak naturally and I'll understand</p>
+              <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Voice Intelligence</h3>
+              <p className="text-sm text-gray-300 leading-relaxed font-light">Natural language processing with human-like understanding</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-md text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
+                <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Smart Routing</h3>
-              <p className="text-sm text-gray-600">I'll find the right person for you</p>
+              <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Smart Routing</h3>
+              <p className="text-sm text-gray-300 leading-relaxed font-light">Intelligent connection to the perfect contact instantly</p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-md text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
+                <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Instant Calls</h3>
-              <p className="text-sm text-gray-600">Connect in seconds with anyone</p>
+              <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Instant Connect</h3>
+              <p className="text-sm text-gray-300 leading-relaxed font-light">Seamless communication established in moments</p>
             </div>
           </div>
         )}

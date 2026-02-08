@@ -6,6 +6,10 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --luxury-gold: #D4AF37;
+  --luxury-dark: #0A0E27;
+  --luxury-darker: #050816;
+  --luxury-accent: #1E2749;
 }
 
 body {
@@ -18,28 +22,81 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-/* Custom Scrollbar Styles */
+/* Custom Scrollbar Styles - Luxury Gold */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: rgba(10, 14, 39, 0.5);
   border-radius: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: linear-gradient(180deg, #D4AF37 0%, #C5A028 100%);
   border-radius: 10px;
-  transition: background 0.2s;
+  transition: background 0.3s;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: linear-gradient(180deg, #F0C852 0%, #D4AF37 100%);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
 }
 
 /* Firefox */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 #f1f5f9;
+  scrollbar-color: #D4AF37 rgba(10, 14, 39, 0.5);
+}
+
+/* Premium Glow Effect */
+@keyframes luxuryGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+  }
+}
+
+.luxury-glow {
+  animation: luxuryGlow 3s ease-in-out infinite;
+}
+
+/* Premium Shimmer Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* Glass Morphism */
+.glass-morphism {
+  background: rgba(10, 14, 39, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* Premium Text Gradient */
+.text-luxury-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #F0C852 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
