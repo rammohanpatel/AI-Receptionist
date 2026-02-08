@@ -6,6 +6,7 @@ import CallUI from '@/components/CallUI';
 import ConversationHistory from '@/components/ConversationHistory';
 import Controls from '@/components/Controls';
 import Notification, { NotificationType } from '@/components/Notification';
+import EmployeeNotificationModal, { NotificationMessage } from '@/components/EmployeeNotificationModal';
 import { ConversationState, Message, Employee } from '@/types';
 
 export default function Home() {
@@ -22,6 +23,9 @@ export default function Home() {
   const [countdown, setCountdown] = useState<number | undefined>(undefined);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [notificationMessages, setNotificationMessages] = useState<NotificationMessage[]>([]);
+  const [pendingEmployee, setPendingEmployee] = useState<Employee | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -292,12 +296,67 @@ export default function Home() {
   };
 
   const initiateCall = async (employeeId: string, employeeName: string) => {
+    // Fetch employee details first
+    const response = await fetch('/api/employees');
+    const { employees } = await response.json();
+    const employee = employees.find((emp: Employee) => emp.id === employeeId);
+
+    if (!employee) return;
+
+    setPendingEmployee(employee);
+    
     // Show notification about connecting
     showNotification(`Notifying ${employeeName}...`, 'info');
 
-    // Simulate employee notification
+    // Simulate chat exchange with employee - Total ~15 seconds
+    const messages: NotificationMessage[] = [];
+    
+    // AI sends initial message (after 1 second)
     setTimeout(() => {
-      showNotification(`${employeeName} has been notified. Connecting...`, 'success');
+      messages.push({
+        id: 1,
+        sender: 'ai',
+        content: `Hi ${employee.name}, there's a visitor at reception who would like to speak with you regarding ${employee.department} matters. Are you available for a quick call?`,
+        timestamp: new Date(),
+        status: 'sent',
+      });
+      setNotificationMessages([...messages]);
+      setIsNotificationModalOpen(true);
+    }, 1000);
+
+    // Message is read (after 4 seconds - employee takes time to read)
+    setTimeout(() => {
+      messages[0].status = 'read';
+      setNotificationMessages([...messages]);
+    }, 4000);
+
+    // Employee types response (after 8 seconds - simulate realistic typing time)
+    setTimeout(() => {
+      messages.push({
+        id: 2,
+        sender: 'employee',
+        content: `Yes, I'm available! Please connect me with them.`,
+        timestamp: new Date(),
+      });
+      setNotificationMessages([...messages]);
+      showNotification(`${employeeName} accepted the call request`, 'success');
+    }, 8000);
+
+    // AI confirms (after 11 seconds)
+    setTimeout(() => {
+      messages.push({
+        id: 3,
+        sender: 'ai',
+        content: `Great! Connecting you now...`,
+        timestamp: new Date(),
+        status: 'sent',
+      });
+      setNotificationMessages([...messages]);
+    }, 11000);
+
+    // Close modal and start countdown (after 14 seconds)
+    setTimeout(() => {
+      setIsNotificationModalOpen(false);
       
       // Start countdown
       let count = 5;
@@ -313,7 +372,7 @@ export default function Home() {
           startCall(employeeId);
         }
       }, 1000);
-    }, 1500);
+    }, 14000);
   };
 
   const startCall = async (employeeId: string) => {
@@ -494,6 +553,14 @@ export default function Home() {
           onClose={() => setNotification(null)}
         />
       )}
+
+      {/* Employee Notification Modal */}
+      <EmployeeNotificationModal
+        isOpen={isNotificationModalOpen}
+        employee={pendingEmployee}
+        messages={notificationMessages}
+        onClose={() => setIsNotificationModalOpen(false)}
+      />
     </main>
   );
 }

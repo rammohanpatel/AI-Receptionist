@@ -50,6 +50,32 @@ body {
   scrollbar-color: #D4AF37 rgba(10, 14, 39, 0.5);
 }
 
+/* Custom Scrollbar for Modal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(10, 14, 39, 0.3);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #D4AF37 0%, #C5A028 100%);
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #F0C852 0%, #D4AF37 100%);
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #D4AF37 rgba(10, 14, 39, 0.3);
+}
+
 /* Premium Glow Effect */
 @keyframes luxuryGlow {
   0%, 100% {
