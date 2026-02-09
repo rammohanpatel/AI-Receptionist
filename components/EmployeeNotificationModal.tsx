@@ -128,6 +128,7 @@ export default function EmployeeNotificationModal({
                           }`}>
                             <span>
                               {message.timestamp.toLocaleTimeString('en-US', {
+                                timeZone: 'Asia/Dubai',
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}

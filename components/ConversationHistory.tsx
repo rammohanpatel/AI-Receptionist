@@ -56,6 +56,7 @@ export default function ConversationHistory({ messages }: ConversationHistoryPro
               <p className="text-sm leading-relaxed">{message.content}</p>
               <p className="text-xs mt-2 opacity-60">
                 {message.timestamp.toLocaleTimeString('en-US', { 
+                  timeZone: 'Asia/Dubai',
                   hour: '2-digit', 
                   minute: '2-digit' 
                 })}

@@ -104,16 +104,16 @@ export default function Home() {
   const playGreetingAudio = async () => {
     if (!hasGreetedRef.current) {
       hasGreetedRef.current = true;
-      const greetingText = 'Hello! Welcome to our office. How may I help you today?';
+      const greetingText = 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. How can I help you today—are you here for a scheduled meeting?';
       
       // Add greeting message to conversation
       addMessage(greetingText, 'assistant');
       
       try {
-        const ttsResponse = await fetch('/api/text-to-speech', {
+        const ttsResponse = await fetch('/api/elevenlabs-tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: greetingText }),
+          body: JSON.stringify({ text: greetingText, voiceType: 'female' }),
         });
 
         if (ttsResponse.ok) {
@@ -162,7 +162,12 @@ export default function Home() {
   };
 
   const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString();
+    const timestamp = new Date().toLocaleTimeString('en-US', { 
+      timeZone: 'Asia/Dubai',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
     setDemoLogs(prev => [...prev, `[${timestamp}] ${message}`]);
     console.log(`[DEMO LOG] ${message}`);
   };
@@ -172,7 +177,7 @@ export default function Home() {
     try {
       addLog(`🔊 Synthesizing ${voiceType} voice: "${text.substring(0, 50)}..."`);
       
-      const ttsResponse = await fetch('/api/voice-synthesis', {
+      const ttsResponse = await fetch('/api/elevenlabs-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voiceType }),
@@ -382,10 +387,10 @@ export default function Home() {
       setConversationState('speaking');
       
       try {
-        const ttsResponse = await fetch('/api/text-to-speech', {
+        const ttsResponse = await fetch('/api/elevenlabs-tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, voiceType: 'female' }),
         });
 
         if (ttsResponse.ok) {

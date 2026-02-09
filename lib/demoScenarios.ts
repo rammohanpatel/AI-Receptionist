@@ -23,7 +23,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Hello! Welcome to our office. How may I help you today?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. How can I help you today—are you here for a scheduled meeting?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -58,7 +58,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Hello! Welcome to our office. How may I help you today?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. How can I help you today—are you here for a scheduled meeting?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -107,7 +107,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Hello! Welcome to our office. How may I help you today?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. How can I help you today—are you here for a scheduled meeting?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
