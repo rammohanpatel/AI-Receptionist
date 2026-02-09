@@ -641,7 +641,14 @@ export default function Home() {
                       <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-[#F0C852] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
                     </button>
                   </div>
-                ) : isDemoMode ? (
+                ) : isDemoMode ? (<>
+                  <Controls
+                    isListening={isListening}
+                    isProcessing={isProcessing}
+                    onStartListening={startListening}
+                    onStopListening={stopListening}
+                    disabled={conversationState === 'calling'}
+                  />
                   <div className="flex justify-center mb-8">
                     <button
                       onClick={exitDemo}
@@ -655,10 +662,12 @@ export default function Home() {
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span className="tracking-wide">Exit Demo</span>
+                      <span className="tracking-wide">Exit</span>
                     </button>
                   </div>
+                  </>
                 ) : (
+                  <>
                   <Controls
                     isListening={isListening}
                     isProcessing={isProcessing}
@@ -666,6 +675,23 @@ export default function Home() {
                     onStopListening={stopListening}
                     disabled={conversationState === 'calling'}
                   />
+                  <div className="flex justify-center mb-8">
+                    <button
+                      onClick={exitDemo}
+                      className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-xl hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-red-500"
+                    >
+                      <svg 
+                        className="w-6 h-6 mr-3" 
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span className="tracking-wide">Exit</span>
+                    </button>
+                  </div>
+                  </>
                 )}
               </>
             )}

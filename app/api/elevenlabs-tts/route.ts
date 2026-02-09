@@ -13,62 +13,116 @@ export async function POST(request: NextRequest) {
 
     const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
     
-    if (!ELEVENLABS_API_KEY) {
-      console.error('ELEVENLABS_API_KEY not found');
-      return NextResponse.json(
-        { error: 'API key not configured' },
-        { status: 500 }
-      );
+    // Try ElevenLabs first
+    if (ELEVENLABS_API_KEY) {
+      try {
+        console.log('[TTS] Attempting ElevenLabs...');
+        
+        // Voice IDs for ElevenLabs (free tier voices)
+        const voiceIds = {
+          female: '21m00Tcm4TlvDq8ikWAM', // Rachel - Professional, warm female voice (free tier)
+          male: 'pNInz6obpgDQGcFmaJgB', // Adam - Clear, professional male voice
+        };
+
+        const voiceId = voiceIds[voiceType as keyof typeof voiceIds] || voiceIds.female;
+
+        console.log(`[ElevenLabs TTS] Synthesizing ${voiceType} voice with ID: ${voiceId}`);
+
+        const response = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+          {
+            method: 'POST',
+            headers: {
+              'Accept': 'audio/mpeg',
+              'Content-Type': 'application/json',
+              'xi-api-key': ELEVENLABS_API_KEY,
+            },
+            body: JSON.stringify({
+              text: text,
+              model_id: 'eleven_turbo_v2_5', // Fast, high-quality model
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.75,
+                style: 0.0,
+                use_speaker_boost: true,
+              },
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const audioBuffer = await response.arrayBuffer();
+          console.log('[ElevenLabs TTS] Success!');
+          
+          return new NextResponse(audioBuffer, {
+            headers: {
+              'Content-Type': 'audio/mpeg',
+              'Content-Length': audioBuffer.byteLength.toString(),
+            },
+          });
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.warn('[ElevenLabs TTS] Failed:', response.status, errorData);
+          console.log('[TTS] Falling back to Google Cloud TTS...');
+        }
+      } catch (elevenLabsError: any) {
+        console.warn('[ElevenLabs TTS] Error:', elevenLabsError.message);
+        console.log('[TTS] Falling back to Google Cloud TTS...');
+      }
+    } else {
+      console.log('[TTS] ElevenLabs API key not found, using Google Cloud TTS...');
     }
 
-    // Voice IDs for ElevenLabs (free tier voices)
-    const voiceIds = {
-      female: '21m00Tcm4TlvDq8ikWAM', // Rachel - Professional, warm female voice (free tier)
-      male: 'pNInz6obpgDQGcFmaJgB', // Adam - Clear, professional male voice
-    };
-
-    const voiceId = voiceIds[voiceType as keyof typeof voiceIds] || voiceIds.female;
-
-    console.log(`[ElevenLabs TTS] Synthesizing ${voiceType} voice with ID: ${voiceId}`);
-
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+    // Fallback to Google Cloud TTS
+    console.log('[Google TTS] Synthesizing speech...');
+    
+    const googleResponse = await fetch(
+      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
-          'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
-          'xi-api-key': ELEVENLABS_API_KEY,
         },
         body: JSON.stringify({
-          text: text,
-          model_id: 'eleven_turbo_v2_5', // Fast, high-quality model
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.0,
-            use_speaker_boost: true,
+          input: { text },
+          voice: {
+            languageCode: 'en-US',
+            name: voiceType === 'female' ? 'en-US-Neural2-F' : 'en-US-Neural2-D',
+            ssmlGender: voiceType === 'female' ? 'FEMALE' : 'MALE',
+          },
+          audioConfig: {
+            audioEncoding: 'MP3',
+            pitch: 0,
+            speakingRate: 1.0,
           },
         }),
       }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('ElevenLabs API error:', response.status, errorData);
+    if (!googleResponse.ok) {
+      const errorData = await googleResponse.json().catch(() => ({}));
+      console.error('[Google TTS] API error:', googleResponse.status, errorData);
       
       return NextResponse.json(
         { 
-          error: 'Text-to-speech service error',
+          error: 'Both TTS services failed',
           details: errorData
         },
-        { status: response.status }
+        { status: 500 }
       );
     }
 
-    const audioBuffer = await response.arrayBuffer();
+    const googleData = await googleResponse.json();
+    const audioContent = googleData.audioContent;
 
-    // Return audio file
+    if (!audioContent) {
+      throw new Error('No audio content received from Google TTS');
+    }
+
+    // Convert base64 to buffer
+    const audioBuffer = Buffer.from(audioContent, 'base64');
+    console.log('[Google TTS] Success!');
+
     return new NextResponse(audioBuffer, {
       headers: {
         'Content-Type': 'audio/mpeg',
@@ -76,7 +130,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('ElevenLabs TTS error:', error);
+    console.error('[TTS] All methods failed:', error);
     return NextResponse.json(
       { 
         error: 'Failed to generate speech',
