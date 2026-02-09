@@ -6,15 +6,16 @@ import { useEffect, useRef } from 'react';
 
 interface ConversationHistoryProps {
   messages: Message[];
+  showProcessing?: boolean;
 }
 
-export default function ConversationHistory({ messages }: ConversationHistoryProps) {
+export default function ConversationHistory({ messages, showProcessing = false }: ConversationHistoryProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or processing state changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, showProcessing]);
 
   // Don't render anything if no messages
   if (messages.length === 0) return null;
@@ -64,6 +65,31 @@ export default function ConversationHistory({ messages }: ConversationHistoryPro
             </div>
           </motion.div>
         ))}
+        
+        {/* Processing Indicator */}
+        {showProcessing && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="flex justify-start"
+          >
+            <div className="max-w-[85%] px-4 py-3 rounded-2xl bg-[#1E2749]/80 text-gray-100 border border-[#D4AF37]/30 backdrop-blur-lg rounded-bl-sm shadow-lg">
+              <p className="text-xs font-semibold mb-2 tracking-wider text-[#D4AF37]">
+                AI CONCIERGE
+              </p>
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+                <span className="text-sm text-gray-300">Processing...</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        
         {/* Invisible element to scroll to */}
         <div ref={messagesEndRef} />
       </div>

@@ -32,6 +32,7 @@ export default function Home() {
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [demoLogs, setDemoLogs] = useState<string[]>([]);
+  const [showProcessingIndicator, setShowProcessingIndicator] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -40,6 +41,14 @@ export default function Home() {
   const hasGreetedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
+  const demoLogsRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll demo logs to bottom when new logs are added
+  useEffect(() => {
+    if (demoLogsRef.current) {
+      demoLogsRef.current.scrollTop = demoLogsRef.current.scrollHeight;
+    }
+  }, [demoLogs]);
 
   // Removed auto-greeting - now triggered by Start button
 
@@ -243,7 +252,10 @@ export default function Home() {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Play through all messages in sequence
-    for (const msg of scenario.messages) {
+    for (let i = 0; i < scenario.messages.length; i++) {
+      const msg = scenario.messages[i];
+      const nextMsg = scenario.messages[i + 1];
+      
       await new Promise(resolve => setTimeout(resolve, msg.delay));
       
       addLog(`💬 ${msg.role === 'user' ? 'User' : 'AI'}: "${msg.content.substring(0, 50)}..."`);
@@ -262,12 +274,22 @@ export default function Home() {
       }
       
       setConversationState('idle');
+      
+      // Show processing indicator before next AI message
+      if (nextMsg && nextMsg.role === 'assistant' && msg.role === 'user') {
+        setShowProcessingIndicator(true);
+        addLog(`🔄 Processing request...`);
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Show processing for 1.5s
+        setShowProcessingIndicator(false);
+      }
     }
 
     // Handle connection or failure
     if (scenario.shouldConnect && scenario.employeeId) {
-      addLog(`📞 Initiating call to employee ${scenario.employeeId}...`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setShowProcessingIndicator(true);
+      addLog(`📞 Checking calendar and initiating call...`);
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setShowProcessingIndicator(false);
       await initiateCall(scenario.employeeId, '');
     } else if (scenario.failureReason) {
       addLog(`❌ Scenario failed: ${scenario.failureReason}`);
@@ -280,6 +302,12 @@ export default function Home() {
 
     setIsDemoMode(false);
     addLog(`✅ Demo scenario completed`);
+  };
+
+  // Exit demo mode and return to landing page
+  const exitDemo = () => {
+    // Refresh the page for a clean reset
+    window.location.reload();
   };
 
   const startListening = async () => {
@@ -322,6 +350,9 @@ export default function Home() {
 
   const processAudio = async (audioBlob: Blob) => {
     try {
+      // Show processing indicator
+      setShowProcessingIndicator(true);
+      
       // Step 1: Speech to Text
       const formData = new FormData();
       formData.append('audio', audioBlob);
@@ -341,12 +372,13 @@ export default function Home() {
         showNotification('I didn\'t catch that. Could you please repeat?', 'error');
         setIsProcessing(false);
         setConversationState('idle');
+        setShowProcessingIndicator(false);
         return;
       }
 
       addMessage(text, 'user');
 
-      // Step 2: AI Processing
+      // Step 2: AI Processing (keep showing processing indicator)
       const chatResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -361,6 +393,9 @@ export default function Home() {
       }
 
       const aiResponse = await chatResponse.json();
+      
+      // Hide processing indicator before speaking
+      setShowProcessingIndicator(false);
 
       // Step 3: Handle response
       await speakAndAddMessage(aiResponse.response, 'assistant');
@@ -377,6 +412,7 @@ export default function Home() {
       showNotification('An error occurred. Please try again.', 'error');
       setIsProcessing(false);
       setConversationState('idle');
+      setShowProcessingIndicator(false);
     }
   };
 
@@ -573,7 +609,7 @@ export default function Home() {
           {/* Left Column - Chat Section (Only show when there are messages) */}
           {messages.length > 0 && (
             <div className="w-96 flex-shrink-0">
-              <ConversationHistory messages={messages} />
+              <ConversationHistory messages={messages} showProcessing={showProcessingIndicator} />
             </div>
           )}
 
@@ -603,6 +639,23 @@ export default function Home() {
                       </svg>
                       <span className="z-10 tracking-wide">Start Live Session</span>
                       <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-[#F0C852] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                    </button>
+                  </div>
+                ) : isDemoMode ? (
+                  <div className="flex justify-center mb-8">
+                    <button
+                      onClick={exitDemo}
+                      className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-xl hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-red-500"
+                    >
+                      <svg 
+                        className="w-6 h-6 mr-3" 
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span className="tracking-wide">Exit Demo</span>
                     </button>
                   </div>
                 ) : (
@@ -706,7 +759,7 @@ export default function Home() {
               </svg>
             </button>
           </div>
-          <div className="p-4 overflow-y-auto custom-scrollbar max-h-64 bg-[#0A0E27]/80">
+          <div ref={demoLogsRef} className="p-4 overflow-y-auto custom-scrollbar max-h-64 bg-[#0A0E27]/80">
             {demoLogs.map((log, index) => (
               <div
                 key={index}
