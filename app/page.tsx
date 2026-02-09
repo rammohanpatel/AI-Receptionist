@@ -7,7 +7,10 @@ import ConversationHistory from '@/components/ConversationHistory';
 import Controls from '@/components/Controls';
 import Notification, { NotificationType } from '@/components/Notification';
 import EmployeeNotificationModal, { NotificationMessage } from '@/components/EmployeeNotificationModal';
+import DemoScenarios from '@/components/DemoScenarios';
+import EmployeeDirectory from '@/components/EmployeeDirectory';
 import { ConversationState, Message, Employee } from '@/types';
+import { DEMO_SCENARIOS, DemoMessage } from '@/lib/demoScenarios';
 
 export default function Home() {
   const [conversationState, setConversationState] = useState<ConversationState>('idle');
@@ -26,6 +29,9 @@ export default function Home() {
   const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [notificationMessages, setNotificationMessages] = useState<NotificationMessage[]>([]);
   const [pendingEmployee, setPendingEmployee] = useState<Employee | null>(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [demoLogs, setDemoLogs] = useState<string[]>([]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -138,6 +144,137 @@ export default function Home() {
     
     // Play greeting
     await playGreetingAudio();
+  };
+
+  // Fetch employees on mount
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('/api/employees');
+      const data = await response.json();
+      setEmployees(data.employees || []);
+    } catch (error) {
+      console.error('Failed to fetch employees:', error);
+    }
+  };
+
+  const addLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDemoLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+    console.log(`[DEMO LOG] ${message}`);
+  };
+
+  // Play audio with voice synthesis
+  const playAudio = async (text: string, voiceType: 'male' | 'female' = 'female') => {
+    try {
+      addLog(`🔊 Synthesizing ${voiceType} voice: "${text.substring(0, 50)}..."`);
+      
+      const ttsResponse = await fetch('/api/voice-synthesis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voiceType }),
+      });
+
+      if (ttsResponse.ok) {
+        const audioBlob = await ttsResponse.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        
+        audioRef.current = new Audio(audioUrl);
+        
+        return new Promise<void>((resolve) => {
+          if (audioRef.current) {
+            audioRef.current.onended = () => {
+              addLog(`✓ Audio playback completed`);
+              URL.revokeObjectURL(audioUrl);
+              resolve();
+            };
+            audioRef.current.onerror = () => {
+              addLog(`⚠ Audio playback error`);
+              URL.revokeObjectURL(audioUrl);
+              resolve();
+            };
+            audioRef.current.play().catch((err) => {
+              addLog(`⚠ Audio play failed: ${err.message}`);
+              URL.revokeObjectURL(audioUrl);
+              resolve();
+            });
+          } else {
+            resolve();
+          }
+        });
+      } else {
+        addLog(`⚠ TTS service unavailable - showing text only`);
+      }
+    } catch (error: any) {
+      addLog(`⚠ TTS error: ${error.message}`);
+    }
+  };
+
+  // Handle demo scenario selection
+  const handleDemoScenario = async (scenarioId: string) => {
+    const scenario = DEMO_SCENARIOS[scenarioId];
+    if (!scenario) return;
+
+    addLog(`🎬 Starting demo scenario: ${scenarioId}`);
+    
+    // Reset state
+    setMessages([]);
+    setDemoLogs([]);
+    setHasStarted(true);
+    setIsDemoMode(true);
+    hasInteractedRef.current = true;
+    
+    // Start camera
+    addLog(`📹 Activating camera...`);
+    await startCamera();
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Play through all messages in sequence
+    for (const msg of scenario.messages) {
+      await new Promise(resolve => setTimeout(resolve, msg.delay));
+      
+      addLog(`💬 ${msg.role === 'user' ? 'User' : 'AI'}: "${msg.content.substring(0, 50)}..."`);
+      
+      // Add message to conversation
+      addMessage(msg.content, msg.role);
+      
+      // Set conversation state
+      if (msg.role === 'assistant') {
+        setConversationState('speaking');
+      }
+      
+      // Play audio if requested
+      if (msg.useVoice && msg.voiceType) {
+        await playAudio(msg.content, msg.voiceType);
+      }
+      
+      setConversationState('idle');
+    }
+
+    // Handle connection or failure
+    if (scenario.shouldConnect && scenario.employeeId) {
+      addLog(`📞 Initiating call to employee ${scenario.employeeId}...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await initiateCall(scenario.employeeId, '');
+    } else if (scenario.failureReason) {
+      addLog(`❌ Scenario failed: ${scenario.failureReason}`);
+      addLog(`👤 Redirecting to human assistance...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      showNotification('Connecting you with human reception...', 'info');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      addLog(`✓ Connected to human receptionist`);
+    }
+
+    setIsDemoMode(false);
+    addLog(`✅ Demo scenario completed`);
   };
 
   const startListening = async () => {
@@ -308,15 +445,15 @@ export default function Home() {
     // Show notification about connecting
     showNotification(`Notifying ${employeeName}...`, 'info');
 
-    // Simulate chat exchange with employee - Total ~15 seconds
+    // Simplified notification - Just AI sending message to employee
     const messages: NotificationMessage[] = [];
     
-    // AI sends initial message (after 1 second)
+    // AI sends notification message (after 1 second)
     setTimeout(() => {
       messages.push({
         id: 1,
         sender: 'ai',
-        content: `Hi ${employee.name}, there's a visitor at reception who would like to speak with you regarding ${employee.department} matters. Are you available for a quick call?`,
+        content: `Hi ${employee.name}, there's a visitor at reception who would like to speak with you regarding ${employee.department} matters. Connecting you now...`,
         timestamp: new Date(),
         status: 'sent',
       });
@@ -324,37 +461,14 @@ export default function Home() {
       setIsNotificationModalOpen(true);
     }, 1000);
 
-    // Message is read (after 4 seconds - employee takes time to read)
+    // Message is read (after 3 seconds)
     setTimeout(() => {
       messages[0].status = 'read';
       setNotificationMessages([...messages]);
-    }, 4000);
+      showNotification(`${employeeName} notified. Connecting...`, 'success');
+    }, 3000);
 
-    // Employee types response (after 8 seconds - simulate realistic typing time)
-    setTimeout(() => {
-      messages.push({
-        id: 2,
-        sender: 'employee',
-        content: `Yes, I'm available! Please connect me with them.`,
-        timestamp: new Date(),
-      });
-      setNotificationMessages([...messages]);
-      showNotification(`${employeeName} accepted the call request`, 'success');
-    }, 8000);
-
-    // AI confirms (after 11 seconds)
-    setTimeout(() => {
-      messages.push({
-        id: 3,
-        sender: 'ai',
-        content: `Great! Connecting you now...`,
-        timestamp: new Date(),
-        status: 'sent',
-      });
-      setNotificationMessages([...messages]);
-    }, 11000);
-
-    // Close modal and start countdown (after 14 seconds)
+    // Close modal and start countdown (after 5 seconds)
     setTimeout(() => {
       setIsNotificationModalOpen(false);
       
@@ -372,7 +486,7 @@ export default function Home() {
           startCall(employeeId);
         }
       }, 1000);
-    }, 14000);
+    }, 5000);
   };
 
   const startCall = async (employeeId: string) => {
@@ -441,74 +555,95 @@ export default function Home() {
         </h1>
         <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
         <p className="text-2xl text-[#D4AF37] font-light tracking-wider">
-          Elite Virtual Concierge Experience
+          Virtual Concierge 
         </p>
         <p className="text-sm text-gray-400 mt-2 font-light tracking-widest uppercase">
-          Powered by Advanced AI
+          Powered by DigitOracle 
         </p>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto">
-        {/* Avatar Section */}
-        <div className="mb-8">
-          <Avatar state={conversationState} isThinking={isProcessing} />
-        </div>
-
-        {/* Controls */}
-        {!isCallActive && (
-          <>
-            {!hasStarted ? (
-              <div className="flex justify-center mb-12">
-                <button
-                  onClick={handleStart}
-                  className="group relative inline-flex items-center justify-center px-16 py-7 text-2xl font-bold text-[#0A0E27] bg-gradient-to-r from-[#D4AF37] via-[#F0C852] to-[#D4AF37] rounded-full shadow-2xl hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-[#F0C852] overflow-hidden"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-[#F0C852] via-[#D4AF37] to-[#F0C852] opacity-0 group-hover:opacity-100 transition-opacity duration-500 shimmer"></span>
-                  <svg 
-                    className="w-10 h-10 mr-4 z-10" 
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                  <span className="z-10 tracking-wide">Initiate Experience</span>
-                  <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-[#F0C852] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
-                </button>
-              </div>
-            ) : (
-              <Controls
-                isListening={isListening}
-                isProcessing={isProcessing}
-                onStartListening={startListening}
-                onStopListening={stopListening}
-                disabled={conversationState === 'calling'}
-              />
-            )}
-          </>
-        )}
-
-        {/* Countdown Display */}
-        {countdown !== undefined && countdown > 0 && (
-          <div className="text-center mt-12">
-            <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] text-[#0A0E27] text-5xl font-bold rounded-full shadow-2xl animate-pulse border-4 border-[#F0C852] luxury-glow">
-              {countdown}
+      {/* Main Content - Two Column Layout */}
+      <div className="max-w-7xl mx-auto">
+        <div className={`flex gap-6 ${messages.length === 0 ? 'justify-center' : ''}`}>
+          {/* Left Column - Chat Section (Only show when there are messages) */}
+          {messages.length > 0 && (
+            <div className="w-96 flex-shrink-0">
+              <ConversationHistory messages={messages} />
             </div>
-            <p className="mt-6 text-xl text-[#D4AF37] font-light tracking-wider">Establishing Connection...</p>
-          </div>
-        )}
+          )}
 
-        {/* Conversation History */}
-        <ConversationHistory messages={messages} />
+          {/* Right Column - Main Content */}
+          <div className={messages.length === 0 ? 'w-full max-w-6xl' : 'flex-1'}>
+            {/* Avatar Section */}
+            <div className="mb-8">
+              <Avatar state={conversationState} isThinking={isProcessing} />
+            </div>
 
-        {/* Features Info - Luxury Cards */}
-        {!hasStarted && (
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative z-10">
-            <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
-                <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
+            {/* Controls */}
+            {!isCallActive && (
+              <>
+                {!hasStarted ? (
+                  <div className="flex justify-center mb-12">
+                    <button
+                      onClick={handleStart}
+                      className="group relative inline-flex items-center justify-center px-16 py-7 text-2xl font-bold text-[#0A0E27] bg-gradient-to-r from-[#D4AF37] via-[#F0C852] to-[#D4AF37] rounded-full shadow-2xl hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-[#F0C852] overflow-hidden"
+                    >
+                      <span className="absolute inset-0 bg-gradient-to-r from-[#F0C852] via-[#D4AF37] to-[#F0C852] opacity-0 group-hover:opacity-100 transition-opacity duration-500 shimmer"></span>
+                      <svg 
+                        className="w-10 h-10 mr-4 z-10" 
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                      <span className="z-10 tracking-wide">Start Live Session</span>
+                      <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-[#F0C852] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+                    </button>
+                  </div>
+                ) : (
+                  <Controls
+                    isListening={isListening}
+                    isProcessing={isProcessing}
+                    onStartListening={startListening}
+                    onStopListening={stopListening}
+                    disabled={conversationState === 'calling'}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Demo Scenarios - shown before starting */}
+            {!hasStarted && (
+              <>
+                <DemoScenarios 
+                  onSelectScenario={handleDemoScenario}
+                  disabled={isDemoMode}
+                />
+                
+                <EmployeeDirectory employees={employees} />
+              </>
+            )}
+
+            
+
+            {/* Countdown Display */}
+            {countdown !== undefined && countdown > 0 && (
+              <div className="text-center mt-12">
+                <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] text-[#0A0E27] text-5xl font-bold rounded-full shadow-2xl animate-pulse border-4 border-[#F0C852] luxury-glow">
+                  {countdown}
+                </div>
+                <p className="mt-6 text-xl text-[#D4AF37] font-light tracking-wider">Establishing Connection...</p>
+              </div>
+            )}
+
+            {/* Features Info - Luxury Cards */}
+            {!hasStarted && (
+              <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative z-10">
+                <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
+                    <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
               </div>
               <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Voice Intelligence</h3>
               <p className="text-sm text-gray-300 leading-relaxed font-light">Natural language processing with human-like understanding</p>
@@ -535,6 +670,8 @@ export default function Home() {
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
 
       {/* Call UI Overlay */}
@@ -544,6 +681,38 @@ export default function Home() {
         onEndCall={endCall}
         countdown={countdown}
       />
+
+      {/* Demo Logs - Fixed at bottom */}
+      {demoLogs.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-[9998] w-96 max-h-80 glass-morphism border-2 border-[#D4AF37] rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-[#050816] px-4 py-3 border-b border-[#D4AF37]/30 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-semibold text-[#D4AF37] tracking-wide">
+                Demo Logs
+              </span>
+            </div>
+            <button
+              onClick={() => setDemoLogs([])}
+              className="text-gray-400 hover:text-[#D4AF37] transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="p-4 overflow-y-auto custom-scrollbar max-h-64 bg-[#0A0E27]/80">
+            {demoLogs.map((log, index) => (
+              <div
+                key={index}
+                className="text-xs text-gray-300 mb-2 font-mono leading-relaxed"
+              >
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Notifications */}
       {notification && (

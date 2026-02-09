@@ -182,7 +182,7 @@ export default function EmployeeNotificationModal({
                     className="w-3 h-3 bg-green-500 rounded-full"
                   />
                   <span className="text-sm text-[#D4AF37] font-medium tracking-wide">
-                    {employee.name} is ready to connect
+                    Notifying {employee.name}...
                   </span>
                   <Phone className="w-4 h-4 text-[#D4AF37]" />
                 </div>

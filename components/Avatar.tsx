@@ -160,7 +160,7 @@ export default function Avatar({ state, isThinking }: AvatarProps) {
             }}
           >
             <motion.img
-              src="/ai-receptionist.png"
+              src="/receptionist.png"
               alt="AI Receptionist"
               className="w-full h-full object-cover"
               animate={{
@@ -242,7 +242,7 @@ export default function Avatar({ state, isThinking }: AvatarProps) {
         >
           {getStateLabel()}
         </motion.p>
-        <p className="text-sm text-gray-400 mt-1 tracking-wider">Elite AI Assistant</p>
+        <p className="text-sm text-gray-400 mt-1 tracking-wider">DigitalAbbot AI Assistant</p>
       </motion.div>
 
       {/* Visual Indicator for Listening */}

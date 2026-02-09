@@ -4,31 +4,28 @@ import { Employee } from '@/types';
 export const EMPLOYEES: Employee[] = [
   {
     id: 'emp001',
-    name: 'Rahul Kumar',
+    name: 'Ahmed Al Mansoori',
     department: 'Engineering',
     title: 'Senior Software Engineer',
-    email: 'rahul.kumar@company.com',
-    isAvailable: false,
+    email: 'ahmed.almansoori@company.com',
+    avatar: '/avatars/ahmed.jpg',
+    isAvailable: true,
     meetings: [
       {
         start: '09:00',
-        end: '10:30',
-        title: 'Sprint Planning'
-      },
-      {
-        start: '14:00',
-        end: '15:00',
-        title: 'Code Review'
+        end: '10:00',
+        title: 'Team Standup'
       }
     ],
     fallbackEmployee: 'emp002'
   },
   {
     id: 'emp002',
-    name: 'Anita Sharma',
+    name: 'Fatima Al Zarooni',
     department: 'Engineering',
     title: 'Engineering Manager',
-    email: 'anita.sharma@company.com',
+    email: 'fatima.alzarooni@company.com',
+    avatar: '/avatars/fatima.jpg',
     isAvailable: true,
     meetings: [
       {
@@ -41,62 +38,61 @@ export const EMPLOYEES: Employee[] = [
   },
   {
     id: 'emp003',
-    name: 'Vikram Patel',
+    name: 'Mohammed Al Falasi',
     department: 'Engineering',
     title: 'Lead Developer',
-    email: 'vikram.patel@company.com',
+    email: 'mohammed.alfalasi@company.com',
+    avatar: '/avatars/mohammed.jpg',
     isAvailable: true,
     meetings: [],
     fallbackEmployee: 'emp002'
   },
   {
     id: 'emp004',
-    name: 'Priya Singh',
+    name: 'Aisha Al Hashimi',
     department: 'Product',
     title: 'Product Manager',
-    email: 'priya.singh@company.com',
-    isAvailable: true,
+    email: 'aisha.alhashimi@company.com',
+    avatar: '/avatars/aisha.jpg',
+    isAvailable: false,
     meetings: [
       {
-        start: '10:00',
-        end: '11:00',
-        title: 'Product Review'
+        start: '09:00',
+        end: '12:00',
+        title: 'Client Workshop'
       }
     ],
     fallbackEmployee: 'emp005'
   },
   {
     id: 'emp005',
-    name: 'Amit Verma',
+    name: 'Omar Al Mazrouei',
     department: 'Product',
     title: 'Senior Product Manager',
-    email: 'amit.verma@company.com',
-    isAvailable: false,
-    meetings: [
-      {
-        start: '09:00',
-        end: '17:00',
-        title: 'Customer Visits'
-      }
-    ],
+    email: 'omar.almazrouei@company.com',
+    avatar: '/avatars/omar.jpg',
+    isAvailable: true,
+    meetings: [],
     fallbackEmployee: 'emp004'
   },
   {
     id: 'emp006',
-    name: 'Sneha Reddy',
+    name: 'Mariam Al Suwaidi',
     department: 'Design',
     title: 'UX Designer',
-    email: 'sneha.reddy@company.com',
+    email: 'mariam.alsuwaidi@company.com',
+    avatar: '/avatars/mariam.jpg',
     isAvailable: true,
     meetings: [],
     fallbackEmployee: 'emp007'
   },
   {
     id: 'emp007',
-    name: 'Arjun Mehta',
+    name: 'Khalid Al Naqbi',
     department: 'Design',
     title: 'Design Lead',
-    email: 'arjun.mehta@company.com',
+    email: 'khalid.alnaqbi@company.com',
+    avatar: '/avatars/khalid.jpg',
     isAvailable: true,
     meetings: [
       {
@@ -108,10 +104,11 @@ export const EMPLOYEES: Employee[] = [
   },
   {
     id: 'emp008',
-    name: 'Kavita Gupta',
+    name: 'Noura Al Kaabi',
     department: 'Sales',
     title: 'Sales Manager',
-    email: 'kavita.gupta@company.com',
+    email: 'noura.alkaabi@company.com',
+    avatar: '/avatars/noura.jpg',
     isAvailable: false,
     meetings: [
       {
@@ -124,10 +121,21 @@ export const EMPLOYEES: Employee[] = [
   },
   {
     id: 'emp009',
-    name: 'Rohan Das',
+    name: 'Saeed Al Dhaheri',
     department: 'Sales',
     title: 'Account Executive',
-    email: 'rohan.das@company.com',
+    email: 'saeed.aldhaheri@company.com',
+    avatar: '/avatars/saeed.jpg',
+    isAvailable: true,
+    meetings: []
+  },
+  {
+    id: 'emp010',
+    name: 'Hessa Al Maktoum',
+    department: 'Human Resources',
+    title: 'HR Manager',
+    email: 'hessa.almaktoum@company.com',
+    avatar: '/avatars/hessa.jpg',
     isAvailable: true,
     meetings: []
   }
