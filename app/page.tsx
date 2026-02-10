@@ -36,6 +36,7 @@ export default function Home() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [demoLogs, setDemoLogs] = useState<string[]>([]);
   const [showProcessingIndicator, setShowProcessingIndicator] = useState(false);
+  const [isUrgentCall, setIsUrgentCall] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -305,11 +306,18 @@ export default function Home() {
     // Handle connection or failure
     if (scenario.shouldConnect && scenario.employeeId) {
       setShowProcessingIndicator(true);
-      addLog(`📞 Checking calendar and initiating call...`);
+      if (scenario.isUrgent) {
+        addLog(`🚨 URGENT: AI assistance required - escalating to human supervisor...`);
+        setIsUrgentCall(true); // Mark call as urgent
+      } else {
+        addLog(`📞 Checking calendar and initiating call...`);
+        setIsUrgentCall(false);
+      }
       await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3s for visibility
       setShowProcessingIndicator(false);
       await initiateCall(scenario.employeeId, '', scenario);
-    } else if (scenario.failureReason) {
+    } else if (scenario.failureReason && !scenario.shouldConnect) {
+      // Old-style failure without connection
       addLog(`❌ Scenario failed: ${scenario.failureReason}`);
       addLog(`👤 Redirecting to human assistance...`);
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -525,8 +533,12 @@ export default function Home() {
 
     setPendingEmployee(employee);
     
-    // Show notification about connecting
-    showNotification(`Notifying ${employeeName || employee.name}...`, 'info');
+    // Show notification about connecting (urgent if applicable)
+    if (scenario?.isUrgent) {
+      showNotification(`🚨 URGENT: Escalating to ${employeeName || employee.name}...`, 'error');
+    } else {
+      showNotification(`Notifying ${employeeName || employee.name}...`, 'info');
+    }
 
     // Simplified notification - Just AI sending message to employee
     const messages: NotificationMessage[] = [];
@@ -536,7 +548,9 @@ export default function Home() {
       messages.push({
         id: 1,
         sender: 'ai',
-        content: `Hi ${employee.name}, there's a visitor at reception who would like to speak with you regarding ${employee.department} matters. Connecting you now...`,
+        content: scenario?.isUrgent 
+          ? `🚨 URGENT: ${employee.name}, the AI receptionist needs immediate assistance at reception. A visitor requires human help.`
+          : `Hi ${employee.name}, there's a visitor at reception who would like to speak with you regarding ${employee.department} matters. Connecting you now...`,
         timestamp: new Date(),
         status: 'sent',
       });
@@ -548,16 +562,25 @@ export default function Home() {
     setTimeout(() => {
       messages[0].status = 'read';
       setNotificationMessages([...messages]);
-      showNotification(`${employeeName || employee.name} notified. Connecting...`, 'success');
+      if (scenario?.isUrgent) {
+        showNotification(`🚨 ${employeeName || employee.name} alerted - Urgent response requested`, 'error');
+      } else {
+        showNotification(`${employeeName || employee.name} notified. Connecting...`, 'success');
+      }
     }, 3000);
 
     // Close modal and start countdown with ringing sound (after 5 seconds)
     setTimeout(() => {
       setIsNotificationModalOpen(false);
       
-      // Start ringing sound
-      addLog(`🔊 Call ringing...`);
-      callSoundsRef.current?.startRinging();
+      // Start ringing sound (urgent or normal)
+      if (scenario?.isUrgent) {
+        addLog(`🚨 URGENT call ringing...`);
+        callSoundsRef.current?.startRinging(true); // Pass true for urgent
+      } else {
+        addLog(`🔊 Call ringing...`);
+        callSoundsRef.current?.startRinging(false);
+      }
       
       // Start countdown
       let count = 5;
@@ -655,6 +678,7 @@ export default function Home() {
     setIsCallActive(false);
     setCurrentEmployee(null);
     setConversationState('idle');
+    setIsUrgentCall(false); // Reset urgent flag
     showNotification('Call ended', 'info');
     
     // Ask if there's anything else
@@ -885,6 +909,7 @@ export default function Home() {
         employee={currentEmployee}
         onEndCall={endCall}
         countdown={countdown}
+        isUrgent={isUrgentCall}
       />
 
       {/* Demo Logs - Fixed at bottom */}

@@ -9,6 +9,7 @@ export interface Employee {
   isAvailable: boolean;
   meetings: Meeting[];
   fallbackEmployee?: string;
+  isUrgentContact?: boolean; // Special flag for urgent AI handovers
 }
 
 export interface Meeting {

@@ -138,6 +138,17 @@ export const EMPLOYEES: Employee[] = [
     avatar: '/avatars/hessa.jpg',
     isAvailable: true,
     meetings: []
+  },
+  {
+    id: 'emp011',
+    name: 'Rashid Al Mansoori',
+    department: 'Reception Services',
+    title: 'Reception Supervisor',
+    email: 'rashid.almansoori@company.com',
+    avatar: '/avatars/rashid.jpg',
+    isAvailable: true,
+    meetings: [],
+    isUrgentContact: true // Special flag for urgent AI handovers
   }
 ];
 

@@ -10,9 +10,10 @@ interface CallUIProps {
   employee: Employee | null;
   onEndCall: () => void;
   countdown?: number;
+  isUrgent?: boolean; // New prop for urgent calls
 }
 
-export default function CallUI({ isActive, employee, onEndCall, countdown }: CallUIProps) {
+export default function CallUI({ isActive, employee, onEndCall, countdown, isUrgent = false }: CallUIProps) {
   const [callStatus, setCallStatus] = useState<'connecting' | 'ringing' | 'connected'>('connecting');
   const [callDuration, setCallDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
@@ -85,6 +86,19 @@ export default function CallUI({ isActive, employee, onEndCall, countdown }: Cal
             <div className="flex items-center space-x-4">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50" />
               <span className="text-xl font-bold text-[#D4AF37]">{getStatusMessage()}</span>
+              {/* Urgent Tag */}
+              {isUrgent && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="flex items-center space-x-2 bg-red-600 px-4 py-2 rounded-full border-2 border-red-400 shadow-xl shadow-red-500/50"
+                >
+                  <svg className="w-5 h-5 text-white animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                  </svg>
+                  <span className="text-sm font-bold text-white tracking-wider">URGENT</span>
+                </motion.div>
+              )}
             </div>
             <div className="text-sm text-gray-400 font-semibold tracking-wide">DHRE Call System</div>
           </div>

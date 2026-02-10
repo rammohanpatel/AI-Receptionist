@@ -16,6 +16,7 @@ export interface DemoScenarioData {
   callMessage?: string; // Message to read to employee during call
   visitorName?: string; // Name of the visitor
   visitorPurpose?: string; // Purpose of the visit
+  isUrgent?: boolean; // Flag for urgent handover calls
 }
 
 export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
@@ -111,8 +112,13 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
   },
   fail: {
     id: 'fail',
-    shouldConnect: false,
-    failureReason: 'Unable to identify employee',
+    employeeId: 'emp011', // Rashid Al Mansoori - Reception Supervisor
+    shouldConnect: true, // Changed from false - now connects for handover
+    failureReason: 'Unable to identify employee - requires human assistance',
+    isUrgent: true, // Flag this as urgent
+    visitorName: 'Confused Visitor',
+    visitorPurpose: 'Unable to clearly identify contact person',
+    callMessage: 'This is an urgent request. The AI receptionist is facing difficulty understanding the visitor\'s requirement. The visitor is unsure about the employee name and department. Kindly come to the reception immediately and take over.',
     messages: [
       {
         role: 'assistant',
@@ -158,7 +164,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
       },
       {
         role: 'assistant',
-        content: 'I apologize, but I\'m unable to confidently identify the employee you\'re looking for. Let me connect you with our reception desk where a human assistant can help you better. They\'ll be able to look through our directory with you.',
+        content: 'I apologize, but I\'m unable to confidently identify the employee you\'re looking for. Let me urgently connect you with our Reception Supervisor who can assist you personally. Please wait a moment.',
         delay: 11500, // Reduced from 21000
         useVoice: true,
         voiceType: 'female',

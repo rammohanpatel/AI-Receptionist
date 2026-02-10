@@ -12,7 +12,7 @@ export class CallSounds {
   }
 
   // MS Teams-like ringing sound (two-tone beep pattern)
-  startRinging(): void {
+  startRinging(isUrgent: boolean = false): void {
     if (!this.audioContext) return;
 
     // Stop any existing ringing
@@ -21,44 +21,74 @@ export class CallSounds {
     const playRingTone = () => {
       if (!this.audioContext) return;
 
-      // First tone (higher)
-      const osc1 = this.audioContext.createOscillator();
-      const gain1 = this.audioContext.createGain();
-      
-      osc1.frequency.value = 480; // Hz
-      osc1.type = 'sine';
-      gain1.gain.value = 0.3;
-      
-      osc1.connect(gain1);
-      gain1.connect(this.audioContext.destination);
-      
-      osc1.start();
-      gain1.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
-      osc1.stop(this.audioContext.currentTime + 0.4);
+      if (isUrgent) {
+        // Urgent: Faster, triple-tone pattern with higher pitch
+        const tones = [
+          { freq: 600, delay: 0 },
+          { freq: 650, delay: 150 },
+          { freq: 700, delay: 300 }
+        ];
+        
+        tones.forEach(({ freq, delay }) => {
+          setTimeout(() => {
+            if (!this.audioContext) return;
+            
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+            
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            gain.gain.value = 0.4; // Louder for urgent
+            
+            osc.connect(gain);
+            gain.connect(this.audioContext.destination);
+            
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.25);
+            osc.stop(this.audioContext.currentTime + 0.25);
+          }, delay);
+        });
+      } else {
+        // Normal: Two-tone beep pattern
+        // First tone (higher)
+        const osc1 = this.audioContext.createOscillator();
+        const gain1 = this.audioContext.createGain();
+        
+        osc1.frequency.value = 480; // Hz
+        osc1.type = 'sine';
+        gain1.gain.value = 0.3;
+        
+        osc1.connect(gain1);
+        gain1.connect(this.audioContext.destination);
+        
+        osc1.start();
+        gain1.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+        osc1.stop(this.audioContext.currentTime + 0.4);
 
-      // Second tone (lower) - slightly delayed
-      setTimeout(() => {
-        if (!this.audioContext) return;
-        
-        const osc2 = this.audioContext.createOscillator();
-        const gain2 = this.audioContext.createGain();
-        
-        osc2.frequency.value = 440; // Hz
-        osc2.type = 'sine';
-        gain2.gain.value = 0.3;
-        
-        osc2.connect(gain2);
-        gain2.connect(this.audioContext.destination);
-        
-        osc2.start();
-        gain2.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
-        osc2.stop(this.audioContext.currentTime + 0.4);
-      }, 400);
+        // Second tone (lower) - slightly delayed
+        setTimeout(() => {
+          if (!this.audioContext) return;
+          
+          const osc2 = this.audioContext.createOscillator();
+          const gain2 = this.audioContext.createGain();
+          
+          osc2.frequency.value = 440; // Hz
+          osc2.type = 'sine';
+          gain2.gain.value = 0.3;
+          
+          osc2.connect(gain2);
+          gain2.connect(this.audioContext.destination);
+          
+          osc2.start();
+          gain2.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+          osc2.stop(this.audioContext.currentTime + 0.4);
+        }, 400);
+      }
     };
 
-    // Play ring tone initially and then every 3 seconds
+    // Play ring tone initially and then every interval
     playRingTone();
-    const interval = setInterval(playRingTone, 3000);
+    const interval = setInterval(playRingTone, isUrgent ? 1500 : 3000); // Faster for urgent
     
     // Store interval ID to clear later
     (this as any).ringingInterval = interval;
