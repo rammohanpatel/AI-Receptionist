@@ -12,7 +12,8 @@ import VerticalDemoScenarios from '@/components/VerticalDemoScenarios';
 import QuickNav from '@/components/QuickNav';
 import EmployeeDirectory from '@/components/EmployeeDirectory';
 import { ConversationState, Message, Employee } from '@/types';
-import { DEMO_SCENARIOS, DemoMessage } from '@/lib/demoScenarios';
+import { DEMO_SCENARIOS, DemoMessage, DemoScenarioData } from '@/lib/demoScenarios';
+import { CallSounds } from '@/lib/sounds';
 
 export default function Home() {
   const [conversationState, setConversationState] = useState<ConversationState>('idle');
@@ -46,6 +47,16 @@ export default function Home() {
   const demoLogsRef = useRef<HTMLDivElement | null>(null);
   const employeeDirectoryRef = useRef<HTMLDivElement | null>(null);
   const startButtonRef = useRef<HTMLButtonElement | null>(null);
+  const callSoundsRef = useRef<CallSounds | null>(null);
+  const currentScenarioRef = useRef<DemoScenarioData | null>(null);
+
+  // Initialize call sounds
+  useEffect(() => {
+    callSoundsRef.current = new CallSounds();
+    return () => {
+      callSoundsRef.current?.cleanup();
+    };
+  }, []);
 
   // Auto-scroll demo logs to bottom when new logs are added
   useEffect(() => {
@@ -241,6 +252,9 @@ export default function Home() {
     const scenario = DEMO_SCENARIOS[scenarioId];
     if (!scenario) return;
 
+    // Store scenario reference for call message
+    currentScenarioRef.current = scenario;
+
     addLog(`🎬 Starting demo scenario: ${scenarioId}`);
     
     // Reset state
@@ -294,7 +308,7 @@ export default function Home() {
       addLog(`📞 Checking calendar and initiating call...`);
       await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3s for visibility
       setShowProcessingIndicator(false);
-      await initiateCall(scenario.employeeId, '');
+      await initiateCall(scenario.employeeId, '', scenario);
     } else if (scenario.failureReason) {
       addLog(`❌ Scenario failed: ${scenario.failureReason}`);
       addLog(`👤 Redirecting to human assistance...`);
@@ -415,7 +429,22 @@ export default function Home() {
 
       // Step 4: Handle call intent
       if (aiResponse.canProceedWithCall && aiResponse.employeeId) {
-        await initiateCall(aiResponse.employeeId, aiResponse.employee);
+        // Create a scenario-like object for live calls
+        const liveCallScenario: DemoScenarioData = {
+          id: 'live-call',
+          employeeId: aiResponse.employeeId,
+          shouldConnect: true,
+          messages: [],
+          callMessage: aiResponse.fallbackEmployeeId 
+            ? `Hello ${aiResponse.fallbackEmployee || 'there'}, there is a visitor in the lobby who was looking for ${aiResponse.employee}, who is currently unavailable. I see your calendar is free. Could you kindly assist this visitor?`
+            : `Hello ${aiResponse.employee || 'there'}, you have a visitor waiting in the lobby to meet with you. They are ready to speak with you now.`
+        };
+        
+        // Use fallback employee if specified
+        const targetEmployeeId = aiResponse.fallbackEmployeeId || aiResponse.employeeId;
+        const targetEmployeeName = aiResponse.fallbackEmployee || aiResponse.employee;
+        
+        await initiateCall(targetEmployeeId, targetEmployeeName, liveCallScenario);
       }
 
       setIsProcessing(false);
@@ -486,7 +515,7 @@ export default function Home() {
     }
   };
 
-  const initiateCall = async (employeeId: string, employeeName: string) => {
+  const initiateCall = async (employeeId: string, employeeName: string, scenario?: DemoScenarioData) => {
     // Fetch employee details first
     const response = await fetch('/api/employees');
     const { employees } = await response.json();
@@ -497,7 +526,7 @@ export default function Home() {
     setPendingEmployee(employee);
     
     // Show notification about connecting
-    showNotification(`Notifying ${employeeName}...`, 'info');
+    showNotification(`Notifying ${employeeName || employee.name}...`, 'info');
 
     // Simplified notification - Just AI sending message to employee
     const messages: NotificationMessage[] = [];
@@ -519,12 +548,16 @@ export default function Home() {
     setTimeout(() => {
       messages[0].status = 'read';
       setNotificationMessages([...messages]);
-      showNotification(`${employeeName} notified. Connecting...`, 'success');
+      showNotification(`${employeeName || employee.name} notified. Connecting...`, 'success');
     }, 3000);
 
-    // Close modal and start countdown (after 5 seconds)
+    // Close modal and start countdown with ringing sound (after 5 seconds)
     setTimeout(() => {
       setIsNotificationModalOpen(false);
+      
+      // Start ringing sound
+      addLog(`🔊 Call ringing...`);
+      callSoundsRef.current?.startRinging();
       
       // Start countdown
       let count = 5;
@@ -537,13 +570,15 @@ export default function Home() {
         if (count <= 0) {
           clearInterval(countdownInterval);
           setCountdown(undefined);
-          startCall(employeeId);
+          // Stop ringing and start call
+          callSoundsRef.current?.stopRinging();
+          startCall(employeeId, scenario);
         }
       }, 1000);
     }, 5000);
   };
 
-  const startCall = async (employeeId: string) => {
+  const startCall = async (employeeId: string, scenario?: DemoScenarioData) => {
     // Fetch employee details
     const response = await fetch('/api/employees');
     const { employees } = await response.json();
@@ -553,6 +588,66 @@ export default function Home() {
       setCurrentEmployee(employee);
       setIsCallActive(true);
       setConversationState('calling');
+      
+      // Play call connected sound
+      addLog(`✅ Call connected`);
+      await callSoundsRef.current?.playCallConnectedSound();
+      
+      // If this is a demo scenario with a call message, speak it via TTS
+      if (scenario?.callMessage) {
+        addLog(`🔊 Reading message to ${employee.name}...`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause after connection
+        
+        try {
+          // Use TTS to speak the call message
+          const ttsResponse = await fetch('/api/elevenlabs-tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: scenario.callMessage, voiceType: 'female' }),
+          });
+
+          if (ttsResponse.ok) {
+            const audioBlob = await ttsResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            const audio = new Audio(audioUrl);
+            
+            // Wait for audio to finish
+            await new Promise<void>((resolve) => {
+              audio.onended = () => {
+                addLog(`✓ Message delivered to ${employee.name}`);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audio.onerror = () => {
+                addLog(`⚠ Audio playback error`);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audio.play().catch((err) => {
+                addLog(`⚠ Audio play failed: ${err.message}`);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              });
+            });
+          } else {
+            addLog(`⚠ TTS service unavailable - showing text only`);
+          }
+        } catch (error: any) {
+          addLog(`⚠ TTS error: ${error.message}`);
+        }
+        
+        // Auto-end call after message is delivered
+        addLog(`📞 Ending call...`);
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Brief pause
+        await callSoundsRef.current?.playCallEndSound();
+        addLog(`✓ Call ended`);
+        
+        // End the call
+        setTimeout(() => {
+          endCall();
+        }, 500);
+      }
     }
   };
 

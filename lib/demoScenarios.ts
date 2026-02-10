@@ -13,13 +13,19 @@ export interface DemoScenarioData {
   messages: DemoMessage[];
   shouldConnect: boolean;
   failureReason?: string;
+  callMessage?: string; // Message to read to employee during call
+  visitorName?: string; // Name of the visitor
+  visitorPurpose?: string; // Purpose of the visit
 }
 
 export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
   scheduled: {
     id: 'scheduled',
-    employeeId: 'emp001',
+    employeeId: 'emp001', // Ahmed Al Mansoori
     shouldConnect: true,
+    visitorName: 'Visitor',
+    visitorPurpose: 'scheduled appointment at 2 PM',
+    callMessage: 'Hello Ahmed, you have a visitor in the lobby for your scheduled appointment at 2 PM. They are ready to meet with you now.',
     messages: [
       {
         role: 'assistant',
@@ -53,8 +59,11 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
   },
   'walk-in': {
     id: 'walk-in',
-    employeeId: 'emp005',
+    employeeId: 'emp005', // Omar Al Mazrouei
     shouldConnect: true,
+    visitorName: 'Walk-in Visitor',
+    visitorPurpose: 'meeting with Aisha Al Hashimi who is currently unavailable',
+    callMessage: 'Hello Omar, there is a visitor in the lobby who was looking for Aisha Al Hashimi from Product team. She is currently in a client workshop until 12 PM. I see your calendar is free. Could you kindly assist this visitor?',
     messages: [
       {
         role: 'assistant',
