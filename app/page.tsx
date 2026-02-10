@@ -8,6 +8,8 @@ import Controls from '@/components/Controls';
 import Notification, { NotificationType } from '@/components/Notification';
 import EmployeeNotificationModal, { NotificationMessage } from '@/components/EmployeeNotificationModal';
 import DemoScenarios from '@/components/DemoScenarios';
+import VerticalDemoScenarios from '@/components/VerticalDemoScenarios';
+import QuickNav from '@/components/QuickNav';
 import EmployeeDirectory from '@/components/EmployeeDirectory';
 import { ConversationState, Message, Employee } from '@/types';
 import { DEMO_SCENARIOS, DemoMessage } from '@/lib/demoScenarios';
@@ -42,6 +44,8 @@ export default function Home() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
   const demoLogsRef = useRef<HTMLDivElement | null>(null);
+  const employeeDirectoryRef = useRef<HTMLDivElement | null>(null);
+  const startButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // Auto-scroll demo logs to bottom when new logs are added
   useEffect(() => {
@@ -279,7 +283,7 @@ export default function Home() {
       if (nextMsg && nextMsg.role === 'assistant' && msg.role === 'user') {
         setShowProcessingIndicator(true);
         addLog(`🔄 Processing request...`);
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Show processing for 1.5s
+        await new Promise(resolve => setTimeout(resolve, 4000)); // Show processing for 3s (increased visibility)
         setShowProcessingIndicator(false);
       }
     }
@@ -288,7 +292,7 @@ export default function Home() {
     if (scenario.shouldConnect && scenario.employeeId) {
       setShowProcessingIndicator(true);
       addLog(`📞 Checking calendar and initiating call...`);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Increased to 3s for visibility
       setShowProcessingIndicator(false);
       await initiateCall(scenario.employeeId, '');
     } else if (scenario.failureReason) {
@@ -308,6 +312,15 @@ export default function Home() {
   const exitDemo = () => {
     // Refresh the page for a clean reset
     window.location.reload();
+  };
+
+  // Handle quick navigation
+  const handleQuickNav = (section: string) => {
+    if (section === 'employees' && employeeDirectoryRef.current) {
+      employeeDirectoryRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (section === 'start' && startButtonRef.current) {
+      startButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const startListening = async () => {
@@ -564,9 +577,14 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[#D4AF37] opacity-5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      {/* Camera Video - Top Left */}
+      {/* Quick Navigation - Only on landing page */}
+      {!hasStarted && (
+        <QuickNav onNavigate={handleQuickNav} />
+      )}
+
+      {/* Camera Video - Top Right */}
       {isCameraActive && (
-        <div className="fixed top-6 left-6 z-[9999] rounded-2xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#0A0E27] luxury-glow">
+        <div className="fixed top-6 right-6 z-[9999] rounded-2xl overflow-hidden shadow-2xl border-2 border-[#D4AF37] bg-[#0A0E27] luxury-glow">
           <video
             ref={videoRef}
             autoPlay
@@ -592,11 +610,11 @@ export default function Home() {
           <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
         </div>
         <h1 className="text-7xl font-bold mb-4 text-luxury-gradient tracking-tight">
-          AI Receptionist
+          DHRE AI Receptionist
         </h1>
         <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
         <p className="text-2xl text-[#D4AF37] font-light tracking-wider">
-          Virtual Concierge 
+          Dubai Holding Real Estate Virtual Concierge
         </p>
         <p className="text-sm text-gray-400 mt-2 font-light tracking-widest uppercase">
           Powered by DigitOracle 
@@ -613,8 +631,20 @@ export default function Home() {
             </div>
           )}
 
-          {/* Right Column - Main Content */}
-          <div className={messages.length === 0 ? 'w-full max-w-6xl' : 'flex-1'}>
+          {/* Right Column - Vertical Demo Scenarios (Only show on landing page) */}
+          {!hasStarted && messages.length === 0 && (
+            <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[100] w-80">
+              <div className="glass-morphism p-6 rounded-2xl border-2 border-[#D4AF37]/30 shadow-2xl">
+                <VerticalDemoScenarios 
+                  onSelectScenario={handleDemoScenario}
+                  disabled={isDemoMode}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Center/Main Column - Main Content */}
+          <div className={messages.length === 0 ? 'w-full max-w-5xl mx-auto' : 'flex-1'}>
             {/* Avatar Section */}
             <div className="mb-8">
               <Avatar state={conversationState} isThinking={isProcessing} />
@@ -626,6 +656,7 @@ export default function Home() {
                 {!hasStarted ? (
                   <div className="flex justify-center mb-12">
                     <button
+                      ref={startButtonRef}
                       onClick={handleStart}
                       className="group relative inline-flex items-center justify-center px-16 py-7 text-2xl font-bold text-[#0A0E27] bg-gradient-to-r from-[#D4AF37] via-[#F0C852] to-[#D4AF37] rounded-full shadow-2xl hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-[#F0C852] overflow-hidden"
                     >
@@ -696,16 +727,11 @@ export default function Home() {
               </>
             )}
 
-            {/* Demo Scenarios - shown before starting */}
+            {/* Demo Scenarios - shown before starting (now vertical on right) */}
             {!hasStarted && (
-              <>
-                <DemoScenarios 
-                  onSelectScenario={handleDemoScenario}
-                  disabled={isDemoMode}
-                />
-                
+              <div ref={employeeDirectoryRef} className="mt-12">
                 <EmployeeDirectory employees={employees} />
-              </>
+              </div>
             )}
 
             

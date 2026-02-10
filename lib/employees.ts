@@ -4,11 +4,11 @@ import { Employee } from '@/types';
 export const EMPLOYEES: Employee[] = [
   {
     id: 'emp001',
-    name: 'Fatima Al Zarooni',
+    name: 'Ahmed Al Mansoori',
     department: 'Engineering',
     title: 'Senior Software Engineer',
-    email: 'fatima.alzarooni@company.com',
-    avatar: '/avatars/fatima.jpg',
+    email: 'ahmed.almansoori@company.com',
+    avatar: '/avatars/ahmed.jpg',
     isAvailable: true,
     meetings: [
       {
@@ -21,11 +21,11 @@ export const EMPLOYEES: Employee[] = [
   },
   {
     id: 'emp002',
-    name: 'Ahmed Al Mansoori',
+    name:  'Fatima Al Zarooni',
     department: 'Engineering',
     title: 'Engineering Manager',
-    email: 'ahmed.almansoori@company.com',
-    avatar: '/avatars/ahmed.jpg',
+    email: 'fatima.alzarooni@company.com',
+    avatar: '/avatars/fatima.jpg',
     isAvailable: true,
     meetings: [
       {

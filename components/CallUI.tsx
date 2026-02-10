@@ -80,13 +80,13 @@ export default function CallUI({ isActive, employee, onEndCall, countdown }: Cal
       >
         {/* Teams-like Call Interface */}
         <div className="w-full h-full flex flex-col">
-          {/* Top Bar */}
-          <div className="bg-gray-900 text-white p-4 flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium">{getStatusMessage()}</span>
+          {/* Top Bar - Enhanced Visibility */}
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-6 flex justify-between items-center border-b-2 border-[#D4AF37] shadow-2xl">
+            <div className="flex items-center space-x-4">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50" />
+              <span className="text-xl font-bold text-[#D4AF37]">{getStatusMessage()}</span>
             </div>
-            <div className="text-sm text-gray-400">Microsoft Teams</div>
+            <div className="text-sm text-gray-400 font-semibold tracking-wide">DHRE Call System</div>
           </div>
 
           {/* Main Call Area */}

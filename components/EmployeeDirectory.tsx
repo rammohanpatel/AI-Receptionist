@@ -13,7 +13,7 @@ export default function EmployeeDirectory({ employees }: EmployeeDirectoryProps)
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-morphism p-6 rounded-2xl border border-[#D4AF37]/30 max-w-6xl mx-auto mb-12"
+      className="glass-morphism p-6 rounded-2xl border border-[#D4AF37]/30 max-w-6xl mx-auto mb-12 relative"
     >
       <div className="flex items-center space-x-3 mb-6">
         <div className="w-10 h-10 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-lg flex items-center justify-center">
@@ -29,7 +29,14 @@ export default function EmployeeDirectory({ employees }: EmployeeDirectoryProps)
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Scroll hint for mobile/overflow */}
+      <div className="absolute top-20 right-6 text-[#D4AF37]/50 text-xs animate-pulse hidden md:block">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto scrollbar-thin scroll-smooth pr-2">
         {employees.map((employee, index) => (
           <motion.div
             key={employee.id}
