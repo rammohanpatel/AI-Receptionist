@@ -731,7 +731,7 @@ export default function Home() {
       {!hasStarted && (
         <div className="fixed bottom-6 right-6 z-[9999]">
           <img 
-            src="/Digitalabbot.png" 
+            src="/DigitalAbbot.png" 
             alt="DigitalAbbot Logo" 
             className="h-20 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
           />
