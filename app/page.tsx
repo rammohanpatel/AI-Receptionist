@@ -716,6 +716,28 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[#D4AF37] opacity-5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
+      {/* DHRE Logo - Top Left Corner (Only on landing page) */}
+      {!hasStarted && (
+        <div className="fixed top-6 left-6 z-[9999]">
+          <img 
+            src="/DHRE.png" 
+            alt="DHRE Logo" 
+            className="h-24 w-auto object-contain"
+          />
+        </div>
+      )}
+
+      {/* DigitalAbbot Logo - Bottom Right Corner (Only on landing page) */}
+      {!hasStarted && (
+        <div className="fixed bottom-6 right-6 z-[9999]">
+          <img 
+            src="/Digitalabbot.png" 
+            alt="DigitalAbbot Logo" 
+            className="h-20 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+          />
+        </div>
+      )}
+
       {/* Quick Navigation - Only on landing page */}
       {!hasStarted && (
         <QuickNav onNavigate={handleQuickNav} />
@@ -756,7 +778,7 @@ export default function Home() {
           Dubai Holding Real Estate Virtual Concierge
         </p>
         <p className="text-sm text-gray-400 mt-2 font-light tracking-widest uppercase">
-          Powered by DigitOracle 
+          Powered by DigitAlchemy® 
         </p>
       </div>
 

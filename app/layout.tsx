@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'DHRE AI Receptionist - Dubai Holding Real Estate',
-  description: 'Intelligent AI receptionist for Dubai Holding Real Estate - Virtual Concierge powered by DigitOracle',
+  description: 'Intelligent AI receptionist for Dubai Holding Real Estate - Virtual Concierge powered by DigitAlchemy®',
 }
 
 export default function RootLayout({
