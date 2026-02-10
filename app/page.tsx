@@ -50,6 +50,7 @@ export default function Home() {
   const startButtonRef = useRef<HTMLButtonElement | null>(null);
   const callSoundsRef = useRef<CallSounds | null>(null);
   const currentScenarioRef = useRef<DemoScenarioData | null>(null);
+  const countdownRef = useRef<HTMLDivElement | null>(null);
 
   // Initialize call sounds
   useEffect(() => {
@@ -65,6 +66,16 @@ export default function Home() {
       demoLogsRef.current.scrollTop = demoLogsRef.current.scrollHeight;
     }
   }, [demoLogs]);
+
+  // Auto-scroll to countdown timer when it appears
+  useEffect(() => {
+    if (countdown !== undefined && countdown > 0 && countdownRef.current) {
+      countdownRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, [countdown]);
 
   // Removed auto-greeting - now triggered by Start button
 
@@ -277,6 +288,9 @@ export default function Home() {
       
       await new Promise(resolve => setTimeout(resolve, msg.delay));
       
+      // Hide processing indicator right before showing the message
+      setShowProcessingIndicator(false);
+      
       addLog(`💬 ${msg.role === 'user' ? 'User' : 'AI'}: "${msg.content.substring(0, 50)}..."`);
       
       // Add message to conversation
@@ -298,10 +312,12 @@ export default function Home() {
       if (nextMsg && nextMsg.role === 'assistant' && msg.role === 'user') {
         setShowProcessingIndicator(true);
         addLog(`🔄 Processing request...`);
-        await new Promise(resolve => setTimeout(resolve, 4000)); // Show processing for 3s (increased visibility)
-        setShowProcessingIndicator(false);
+        // Don't hide processing indicator here - let it show until next message appears
       }
     }
+
+    // Hide processing indicator before handling connection
+    setShowProcessingIndicator(false);
 
     // Handle connection or failure
     if (scenario.shouldConnect && scenario.employeeId) {
@@ -857,7 +873,7 @@ export default function Home() {
 
             {/* Countdown Display */}
             {countdown !== undefined && countdown > 0 && (
-              <div className="text-center mt-12">
+              <div ref={countdownRef} className="text-center mt-12">
                 <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] text-[#0A0E27] text-5xl font-bold rounded-full shadow-2xl animate-pulse border-4 border-[#F0C852] luxury-glow">
                   {countdown}
                 </div>
