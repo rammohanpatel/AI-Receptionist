@@ -1,13 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Play, Calendar, UserX, AlertCircle } from 'lucide-react';
+import { Play, Calendar, UserX, AlertCircle, ShieldAlert } from 'lucide-react';
 
 export interface DemoScenario {
   id: string;
   title: string;
   description: string;
-  icon: 'calendar' | 'userx' | 'alert';
+  icon: 'calendar' | 'userx' | 'alert' | 'shield';
   color: string;
 }
 
@@ -38,12 +38,20 @@ const scenarios: DemoScenario[] = [
     icon: 'alert',
     color: 'from-red-500 to-red-600',
   },
+  {
+    id: 'third-party-reference',
+    title: 'Third-Party Reference',
+    description: 'Restricted materials request - fraud prevention',
+    icon: 'shield',
+    color: 'from-purple-500 to-purple-600',
+  },
 ];
 
 const iconMap = {
   calendar: Calendar,
   userx: UserX,
   alert: AlertCircle,
+  shield: ShieldAlert,
 };
 
 export default function VerticalDemoScenarios({ onSelectScenario, disabled }: VerticalDemoScenariosProps) {

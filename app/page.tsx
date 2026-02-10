@@ -140,7 +140,7 @@ export default function Home() {
   const playGreetingAudio = async () => {
     if (!hasGreetedRef.current) {
       hasGreetedRef.current = true;
-      const greetingText = 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. How can I help you today—are you here for a scheduled meeting?';
+      const greetingText = 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. Sir, may I get your name, please?';
       
       // Add greeting message to conversation
       addMessage(greetingText, 'assistant');
@@ -453,6 +453,10 @@ export default function Home() {
 
       // Step 4: Handle call intent
       if (aiResponse.canProceedWithCall && aiResponse.employeeId) {
+        // Extract visitor name and purpose for the call message
+        const visitorName = aiResponse.visitorName || 'A visitor';
+        const purpose = aiResponse.purposeOfVisit || 'to meet with you';
+        
         // Create a scenario-like object for live calls
         const liveCallScenario: DemoScenarioData = {
           id: 'live-call',
@@ -460,8 +464,8 @@ export default function Home() {
           shouldConnect: true,
           messages: [],
           callMessage: aiResponse.fallbackEmployeeId 
-            ? `Hello ${aiResponse.fallbackEmployee || 'there'}, there is a visitor in the lobby who was looking for ${aiResponse.employee}, who is currently unavailable. I see your calendar is free. Could you kindly assist this visitor?`
-            : `Hello ${aiResponse.employee || 'there'}, you have a visitor waiting in the lobby to meet with you. They are ready to speak with you now.`
+            ? `Hello ${aiResponse.fallbackEmployee || 'there'}, ${visitorName} is waiting in the lobby. They were looking for ${aiResponse.employee}, who is currently unavailable. The purpose of their visit is ${purpose}. I see your calendar is free. Could you kindly assist this visitor?`
+            : `Hello ${aiResponse.employee || 'there'}, ${visitorName} is waiting for you in the lobby. The purpose of their visit is ${purpose}. They are ready to speak with you now.`
         };
         
         // Use fallback employee if specified

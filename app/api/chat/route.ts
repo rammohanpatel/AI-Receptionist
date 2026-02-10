@@ -10,27 +10,54 @@ export async function POST(request: NextRequest) {
 
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // System prompt for structured response
-    const systemPrompt = `You are an AI receptionist for a corporate office. Your job is to:
-1. Understand visitor intent
-2. Extract employee name and department
-3. Provide helpful, professional responses
-4. Detect confirmations (yes/no responses)
+    // System prompt for structured response with mandatory name/purpose workflow
+    const systemPrompt = `You are an AI receptionist for Dubai Holding Real Estate corporate office.
 
-Rules:
-- Be polite and professional
-- Keep responses concise (1-2 sentences)
-- If name is unclear, ask for clarification
-- Detect when visitor confirms or denies a suggestion (yes/yeah/sure/correct vs no/nope/wrong/different)
-- Always confirm before taking action
+MANDATORY WORKFLOW (MUST FOLLOW IN ORDER):
+1. FIRST: Always ask for visitor's name if not yet collected
+   - "Sir/Madam, may I get your name, please?"
+   - Do not proceed without capturing name
+   
+2. SECOND: Always ask for purpose of visit after name is captured
+   - "Thank you, [Name]. May I know the purpose of your visit?"
+   - Do not proceed without understanding purpose
+
+3. THIRD: Process the request based on purpose
+   - If requesting employee connection → route to employee
+   - If requesting restricted/confidential materials → human handoff
+   - If third-party reference without proper authorization → human handoff
+   - If information request → answer or route appropriately
+
+CRITICAL RULES:
+- Never bypass asking for name first
+- Never bypass asking for purpose second
+- Never provide or promise access to restricted materials (master plans, confidential documents, internal data)
+- If visitor references someone but requests restricted info → human handoff with context
+- Use visitor's name throughout conversation for personalization
+- Detect when visitor is asking for things beyond your authority → escalate to human desk
+
+INTENTS:
+- "collect_name": Need to ask for visitor's name
+- "collect_purpose": Need to ask for purpose of visit
+- "make_call": Ready to connect to employee (name & purpose collected)
+- "human_handoff": Request involves restricted access, third-party claims, or out of scope
+- "confirm_yes": Visitor confirms suggestion
+- "confirm_no": Visitor denies suggestion
+- "ask_question": General question
+- "unknown": Unclear intent
 
 Respond in JSON format:
 {
-  "intent": "make_call" | "confirm_yes" | "confirm_no" | "ask_question" | "leave_message" | "unknown",
+  "intent": "collect_name" | "collect_purpose" | "make_call" | "human_handoff" | "confirm_yes" | "confirm_no" | "ask_question" | "unknown",
+  "visitorName": "extracted name or null",
+  "purposeOfVisit": "extracted purpose or null",
   "employee": "extracted employee name or null",
   "department": "extracted department or null",
+  "hasRestrictedRequest": boolean,
+  "thirdPartyReference": "person mentioned as reference or null",
   "confidence": 0.0-1.0,
-  "response": "what to say to the visitor"
+  "response": "what to say to the visitor",
+  "requiresHumanDesk": boolean
 }`;
 
     const conversationContext = conversationHistory
@@ -65,6 +92,41 @@ Provide your response in JSON format only.`;
         confidence: 0.5,
         response: text
       };
+    }
+
+    // Handle mandatory name collection (highest priority)
+    if (aiResponse.intent === 'collect_name') {
+      return NextResponse.json({
+        intent: 'collect_name',
+        response: aiResponse.response || "Sir, may I get your name, please?",
+        requiresName: true
+      });
+    }
+
+    // Handle mandatory purpose collection (second priority)
+    if (aiResponse.intent === 'collect_purpose') {
+      return NextResponse.json({
+        intent: 'collect_purpose',
+        response: aiResponse.response,
+        visitorName: aiResponse.visitorName,
+        requiresPurpose: true
+      });
+    }
+
+    // Handle human handoff for restricted/third-party requests
+    if (aiResponse.intent === 'human_handoff' || aiResponse.requiresHumanDesk) {
+      return NextResponse.json({
+        intent: 'human_handoff',
+        response: aiResponse.response || "Thank you for sharing that. I'm unable to assist with this request directly. Let me connect you with our reception desk for assistance.",
+        visitorName: aiResponse.visitorName,
+        purposeOfVisit: aiResponse.purposeOfVisit,
+        thirdPartyReference: aiResponse.thirdPartyReference,
+        hasRestrictedRequest: aiResponse.hasRestrictedRequest,
+        employeeId: 'emp011', // Rashid Al Mansoori - Reception Supervisor
+        canProceedWithCall: true,
+        isUrgent: true, // Mark as urgent for human handoff
+        requiresHumanDesk: true
+      });
     }
 
     // Handle confirmation responses - check if previous message had requiresConfirmation
@@ -102,6 +164,8 @@ Provide your response in JSON format only.`;
           response: `Perfect! I'll connect you with ${employee.name} from ${employee.department}. Please wait while I notify them.`,
           employee: employee.name,
           employeeId: employee.id,
+          visitorName: aiResponse.visitorName,
+          purposeOfVisit: aiResponse.purposeOfVisit,
           canProceedWithCall: true
         });
       }
@@ -225,6 +289,8 @@ Respond in JSON format:
         response: `Perfect! I'll connect you with ${employee.name} from ${employee.department}. Please wait for a moment while I notify them.`,
         employee: employee.name,
         employeeId: employee.id,
+        visitorName: aiResponse.visitorName,
+        purposeOfVisit: aiResponse.purposeOfVisit,
         canProceedWithCall: true
       });
     }
