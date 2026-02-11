@@ -1,13 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Play, Calendar, UserX, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Play, Calendar, UserX, AlertCircle, ShieldAlert, UserCog } from 'lucide-react';
 
 export interface DemoScenario {
   id: string;
   title: string;
   description: string;
-  icon: 'calendar' | 'userx' | 'alert' | 'shield';
+  icon: 'calendar' | 'userx' | 'alert' | 'shield' | 'usercog';
   color: string;
 }
 
@@ -45,6 +45,13 @@ const scenarios: DemoScenario[] = [
     icon: 'shield',
     color: 'from-purple-500 to-purple-600',
   },
+  {
+    id: 'ceo-response',
+    title: 'CEO Response Flow',
+    description: 'Visitor requests CEO meeting - AI connects, CEO responds, message relayed back',
+    icon: 'usercog',
+    color: 'from-blue-500 to-indigo-600',
+  },
 ];
 
 const iconMap = {
@@ -52,6 +59,7 @@ const iconMap = {
   userx: UserX,
   alert: AlertCircle,
   shield: ShieldAlert,
+  usercog: UserCog,
 };
 
 export default function DemoScenarios({ onSelectScenario, disabled }: DemoScenariosProps) {
@@ -66,7 +74,7 @@ export default function DemoScenarios({ onSelectScenario, disabled }: DemoScenar
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
         {scenarios.map((scenario, index) => {
           const Icon = iconMap[scenario.icon];
           return (

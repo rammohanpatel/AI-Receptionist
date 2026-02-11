@@ -149,6 +149,22 @@ export const EMPLOYEES: Employee[] = [
     isAvailable: true,
     meetings: [],
     isUrgentContact: true // Special flag for urgent AI handovers
+  },
+  {
+    id: 'emp012',
+    name: 'Abdullah Al Maktoum',
+    department: 'Executive Leadership',
+    title: 'CEO',
+    email: 'abdullah.almaktoum@company.com',
+    avatar: '/avatars/abdullah.jpg',
+    isAvailable: true,
+    meetings: [
+      {
+        start: '14:00',
+        end: '16:00',
+        title: 'Board Meeting'
+      }
+    ]
   }
 ];
 

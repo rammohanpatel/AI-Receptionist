@@ -633,11 +633,147 @@ export default function Home() {
       setConversationState('calling');
       
       // Play call connected sound
-      addLog(`✅ Call connected`);
+      addLog(`✅ Call connected to CEO`);
       await callSoundsRef.current?.playCallConnectedSound();
       
-      // If this is a demo scenario with a call message, speak it via TTS
-      if (scenario?.callMessage) {
+      // Check if this is CEO flow with multi-speaker sequence
+      if (scenario?.isCeoFlow && scenario?.ceoResponse) {
+        // CEO Flow: AI speaks, CEO responds, AI relays
+        
+        // Step 1: AI informs CEO about visitor
+        addLog(`🔊 AI informing CEO about visitor...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const aiToCeoMessage = `Hello, this is the AI receptionist. ${scenario.visitorName} is in the lobby requesting to meet with you. Shall I ask them to wait?`;
+        
+        try {
+          const aiResponse = await fetch('/api/elevenlabs-tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: aiToCeoMessage, voiceType: 'female' }),
+          });
+
+          if (aiResponse.ok) {
+            const audioBlob = await aiResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            
+            await new Promise<void>((resolve) => {
+              audio.onended = () => {
+                addLog(`✓ Message delivered to CEO`);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audio.onerror = () => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audio.play().catch(() => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              });
+            });
+          }
+        } catch (error: any) {
+          addLog(`⚠ TTS error: ${error.message}`);
+        }
+        
+        // Step 2: CEO responds (using male voice)
+        addLog(`🎙️ CEO responding...`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        try {
+          const ceoResponse = await fetch('/api/elevenlabs-tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: scenario.ceoResponse, voiceType: 'male' }),
+          });
+
+          if (ceoResponse.ok) {
+            const audioBlob = await ceoResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            
+            await new Promise<void>((resolve) => {
+              audio.onended = () => {
+                addLog(`✓ CEO response received`);
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audio.onerror = () => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              };
+              audio.play().catch(() => {
+                URL.revokeObjectURL(audioUrl);
+                resolve();
+              });
+            });
+          }
+        } catch (error: any) {
+          addLog(`⚠ TTS error: ${error.message}`);
+        }
+        
+        // Step 3: CEO ends call manually
+        addLog(`📞 CEO ending call...`);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await callSoundsRef.current?.playCallEndSound();
+        addLog(`✓ Call ended by CEO`);
+        
+        // End the call
+        setIsCallActive(false);
+        setCurrentEmployee(null);
+        setConversationState('idle');
+        
+        // Step 4: AI relays CEO's message to visitor
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        addLog(`🔊 AI relaying CEO's message to visitor...`);
+        
+        const relayMessage = `Mr. CEO has requested you to kindly wait for 15 minutes. His PA will receive you from the reception shortly. Please take a seat, and if you need anything, feel free to contact me.`;
+        
+        addMessage(relayMessage, 'assistant');
+        setConversationState('speaking');
+        
+        try {
+          const relayResponse = await fetch('/api/elevenlabs-tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: relayMessage, voiceType: 'female' }),
+          });
+
+          if (relayResponse.ok) {
+            const audioBlob = await relayResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            
+            await new Promise<void>((resolve) => {
+              audio.onended = () => {
+                addLog(`✓ Message relayed to visitor`);
+                URL.revokeObjectURL(audioUrl);
+                setConversationState('idle');
+                resolve();
+              };
+              audio.onerror = () => {
+                URL.revokeObjectURL(audioUrl);
+                setConversationState('idle');
+                resolve();
+              };
+              audio.play().catch(() => {
+                URL.revokeObjectURL(audioUrl);
+                setConversationState('idle');
+                resolve();
+              });
+            });
+          } else {
+            setConversationState('idle');
+          }
+        } catch (error: any) {
+          addLog(`⚠ TTS error: ${error.message}`);
+          setConversationState('idle');
+        }
+        
+      } else if (scenario?.callMessage) {
+        // Standard flow (non-CEO)
         addLog(`🔊 Reading message to ${employee.name}...`);
         await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause after connection
         

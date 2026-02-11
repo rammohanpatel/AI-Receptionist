@@ -17,6 +17,8 @@ export interface DemoScenarioData {
   visitorName?: string; // Name of the visitor
   visitorPurpose?: string; // Purpose of the visit
   isUrgent?: boolean; // Flag for urgent handover calls
+  isCeoFlow?: boolean; // Flag for CEO response flow with multi-speaker sequence
+  ceoResponse?: string; // CEO's response message for CEO flow
 }
 
 export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
@@ -254,6 +256,53 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
         role: 'assistant',
         content: 'Thank you for sharing that, Mr. Smith. I understand you\'re here to collect master planning documents. However, I\'m unable to provide or release such materials directly. Let me connect you with our reception desk who can verify your request and assist you properly.',
         delay: 7000,
+        useVoice: true,
+        voiceType: 'female',
+      },
+    ],
+  },
+  'ceo-response': {
+    id: 'ceo-response',
+    employeeId: 'emp012', // Abdullah Al Maktoum - CEO
+    shouldConnect: true,
+    visitorName: 'James Anderson',
+    visitorPurpose: 'Meeting with CEO',
+    isCeoFlow: true, // Special flag for CEO response flow
+    callMessage: '', // CEO will respond with custom message
+    ceoResponse: 'Please tell Mr. Anderson to wait for 15 minutes. My PA will receive him from the lobby shortly.',
+    messages: [
+      {
+        role: 'assistant',
+        content: 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?',
+        delay: 0,
+        useVoice: true,
+        voiceType: 'female',
+      },
+      {
+        role: 'user',
+        content: 'Good morning, my name is James Anderson.',
+        delay: 2000,
+        useVoice: true,
+        voiceType: 'male',
+      },
+      {
+        role: 'assistant',
+        content: 'Good morning, Mr. Anderson. May I know the purpose of your visit today?',
+        delay: 3500,
+        useVoice: true,
+        voiceType: 'female',
+      },
+      {
+        role: 'user',
+        content: 'Can I meet the CEO? I have an important matter to discuss.',
+        delay: 5000,
+        useVoice: true,
+        voiceType: 'male',
+      },
+      {
+        role: 'assistant',
+        content: 'Certainly, Mr. Anderson. Let me check the CEO\'s availability and connect with them right away. Please give me a moment.',
+        delay: 6500,
         useVoice: true,
         voiceType: 'female',
       },

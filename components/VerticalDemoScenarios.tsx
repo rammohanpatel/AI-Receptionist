@@ -1,13 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Play, Calendar, UserX, AlertCircle, ShieldAlert } from 'lucide-react';
+import { Play, Calendar, UserX, AlertCircle, ShieldAlert, UserCog } from 'lucide-react';
 
 export interface DemoScenario {
   id: string;
   title: string;
   description: string;
-  icon: 'calendar' | 'userx' | 'alert' | 'shield';
+  icon: 'calendar' | 'userx' | 'alert' | 'shield' | 'usercog';
   color: string;
 }
 
@@ -45,6 +45,13 @@ const scenarios: DemoScenario[] = [
     icon: 'shield',
     color: 'from-purple-500 to-purple-600',
   },
+  {
+    id: 'ceo-response',
+    title: 'CEO Response Flow',
+    description: 'AI connects to CEO, CEO responds, message relayed',
+    icon: 'usercog',
+    color: 'from-blue-500 to-indigo-600',
+  },
 ];
 
 const iconMap = {
@@ -52,6 +59,7 @@ const iconMap = {
   userx: UserX,
   alert: AlertCircle,
   shield: ShieldAlert,
+  usercog: UserCog,
 };
 
 export default function VerticalDemoScenarios({ onSelectScenario, disabled }: VerticalDemoScenariosProps) {
