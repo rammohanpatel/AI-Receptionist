@@ -140,7 +140,7 @@ export default function Home() {
   const playGreetingAudio = async () => {
     if (!hasGreetedRef.current) {
       hasGreetedRef.current = true;
-      const greetingText = 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. Sir, may I get your name, please?';
+      const greetingText = 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?';
       
       // Add greeting message to conversation
       addMessage(greetingText, 'assistant');

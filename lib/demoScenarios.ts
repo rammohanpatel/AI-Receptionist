@@ -30,7 +30,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. Sir, may I get your name, please?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -76,27 +76,27 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     id: 'walk-in',
     employeeId: 'emp005', // Omar Al Mazrouei
     shouldConnect: true,
-    visitorName: 'Sarah Williams',
+    visitorName: 'David Martinez',
     visitorPurpose: 'meeting with Product team regarding project inquiry',
-    callMessage: 'Hello Omar, Sarah Williams is in the lobby. She was looking for Aisha Al Hashimi from Product team, but Aisha is currently in a client workshop until 12 PM. I see your calendar is free. Could you kindly assist this visitor with her project inquiry?',
+    callMessage: 'Hello Omar, David Martinez is in the lobby. He was looking for Aisha Al Hashimi from Product team, but Aisha is currently in a client workshop until 12 PM. I see your calendar is free. Could you kindly assist this visitor with his project inquiry?',
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. Sir, may I get your name, please?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
       },
       {
         role: 'user',
-        content: 'Hi, I\'m Sarah Williams.',
+        content: 'Hi, I\'m David Martinez.',
         delay: 2000,
         useVoice: true,
         voiceType: 'male',
       },
       {
         role: 'assistant',
-        content: 'Thank you, Ms. Williams. May I know the purpose of your visit today?',
+        content: 'Thank you, Mr. Martinez. May I know the purpose of your visit today?',
         delay: 3500,
         useVoice: true,
         voiceType: 'female',
@@ -110,7 +110,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
       },
       {
         role: 'assistant',
-        content: 'Let me check Aisha Al Hashimi\'s availability for you, Ms. Williams.',
+        content: 'Let me check Aisha Al Hashimi\'s availability for you, Mr. Martinez.',
         delay: 6500,
         useVoice: true,
         voiceType: 'female',
@@ -150,7 +150,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. Sir, may I get your name, please?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -224,7 +224,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. Sir, may I get your name, please?',
+        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
