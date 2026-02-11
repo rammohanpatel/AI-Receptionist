@@ -1,7 +1,8 @@
 {
-  "name": "ai-receptionist",
+  "name": "innovation-lab-ai-receptionist",
   "version": "0.1.0",
   "private": true,
+  "description": "Innovation Lab Virtual Concierge - AI-powered reception system at Dubai Holding Real Estate",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

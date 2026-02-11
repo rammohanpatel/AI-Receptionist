@@ -1,22 +1,10 @@
-# AI Receptionist 🤖
+# Innovation Lab AI Receptionist
 
-A realistic, human-like AI receptionist that handles voice interactions, understands visitor intent, checks employee availability, and routes calls intelligently with a Microsoft Teams-like interface.
+A sophisticated AI-powered virtual receptionist system built for the Innovation Lab at Dubai Holding Real Estate (DHRE). This cutting-edge solution leverages advanced voice AI, natural language processing, and intelligent routing to provide seamless visitor management and employee connectivity.
 
-![AI Receptionist Demo](https://img.shields.io/badge/Status-Demo%20Ready-brightgreen)
+## � Overview
 
-## 🎯 Product Vision
-
-Create an enterprise-ready AI receptionist that:
-- ✅ Talks to visitors via voice + avatar
-- ✅ Understands whom they want to call
-- ✅ Checks employee availability
-- ✅ Notifies employees before calls
-- ✅ Routes calls intelligently
-- ✅ Looks & feels like Microsoft Teams
-
-## 🚀 Features
-
-### Core Capabilities
+The Innovation Lab AI Receptionist serves as a virtual concierge at the Innovation Lab reception, offering:
 - **Voice Interaction**: Real-time speech-to-text (Whisper) and text-to-speech (OpenAI TTS)
 - **AI Avatar**: Animated avatar with state transitions (idle, listening, thinking, speaking)
 - **Smart Intent Recognition**: Gemini AI extracts intent and employee information

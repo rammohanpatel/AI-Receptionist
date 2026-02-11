@@ -100,7 +100,7 @@ export default function CallUI({ isActive, employee, onEndCall, countdown, isUrg
                 </motion.div>
               )}
             </div>
-            <div className="text-sm text-gray-400 font-semibold tracking-wide">DHRE Call System</div>
+            <div className="text-sm text-gray-400 font-semibold tracking-wide">Innovation Lab Call System</div>
           </div>
 
           {/* Main Call Area */}

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     // System prompt for structured response with mandatory name/purpose workflow
-    const systemPrompt = `You are an AI receptionist for Dubai Holding Real Estate corporate office.
+    const systemPrompt = `You are a professional AI receptionist for the Innovation Lab at Dubai Holding Real Estate (DHRE). You assist visitors at the Innovation Lab reception desk with a warm, professional demeanor.
 
 MANDATORY WORKFLOW (MUST FOLLOW IN ORDER):
 1. FIRST: Always ask for visitor's name if not yet collected

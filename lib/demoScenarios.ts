@@ -30,7 +30,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
+        content: 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -82,7 +82,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
+        content: 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -150,7 +150,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
+        content: 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',
@@ -224,7 +224,7 @@ export const DEMO_SCENARIOS: Record<string, DemoScenarioData> = {
     messages: [
       {
         role: 'assistant',
-        content: 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?',
+        content: 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?',
         delay: 0,
         useVoice: true,
         voiceType: 'female',

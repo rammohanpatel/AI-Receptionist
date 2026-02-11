@@ -61,7 +61,7 @@ export default function ConversationHistory({ messages, showProcessing = false }
               <p className={`text-xs font-semibold mb-2 tracking-wider ${
                 message.role === 'user' ? 'text-[#0A0E27]/70' : 'text-[#D4AF37]'
               }`}>
-                {message.role === 'user' ? 'YOU' : 'DHRE AI CONCIERGE'}
+                {message.role === 'user' ? 'YOU' : 'INNOVATION LAB AI'}
               </p>
               <p className="text-sm leading-relaxed">{message.content}</p>
               <p className="text-xs mt-2 opacity-60">
@@ -89,7 +89,7 @@ export default function ConversationHistory({ messages, showProcessing = false }
                 <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>DHRE AI CONCIERGE</span>
+                <span>INNOVATION LAB AI</span>
               </p>
               <div className="flex items-center space-x-3">
                 <div className="flex space-x-1.5">

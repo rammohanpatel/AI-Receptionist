@@ -140,7 +140,7 @@ export default function Home() {
   const playGreetingAudio = async () => {
     if (!hasGreetedRef.current) {
       hasGreetedRef.current = true;
-      const greetingText = 'Welcome to Dubai Holding Real Estate, proud to shape some of the UAE\'s most recognized communities. May I get your name, please?';
+      const greetingText = 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?';
       
       // Add greeting message to conversation
       addMessage(greetingText, 'assistant');
@@ -771,14 +771,14 @@ export default function Home() {
           <div className="w-20 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
         </div>
         <h1 className="text-7xl font-bold mb-4 text-luxury-gradient tracking-tight">
-          DHRE AI Receptionist
+          Innovation Lab AI Receptionist
         </h1>
         <div className="w-32 h-1 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent mx-auto mb-6"></div>
         <p className="text-2xl text-[#D4AF37] font-light tracking-wider">
-          Dubai Holding Real Estate Virtual Concierge
+          Innovation Lab Virtual Concierge
         </p>
         <p className="text-sm text-gray-400 mt-2 font-light tracking-widest uppercase">
-          Powered by DigitAlchemy® 
+          AI Receptionist @ Innovation Lab (DHRE) • Powered by DigitAlchemy® 
         </p>
       </div>
 
