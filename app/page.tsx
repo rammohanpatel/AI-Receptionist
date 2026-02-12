@@ -457,20 +457,33 @@ export default function Home() {
         const visitorName = aiResponse.visitorName || 'A visitor';
         const purpose = aiResponse.purposeOfVisit || 'to meet with you';
         
-        // Create a scenario-like object for live calls
-        const liveCallScenario: DemoScenarioData = {
-          id: 'live-call',
-          employeeId: aiResponse.employeeId,
-          shouldConnect: true,
-          messages: [],
-          callMessage: aiResponse.fallbackEmployeeId 
-            ? `Hello ${aiResponse.fallbackEmployee || 'there'}, ${visitorName} is waiting in the lobby. They were looking for ${aiResponse.employee}, who is currently unavailable. The purpose of their visit is ${purpose}. I see your calendar is free. Could you kindly assist this visitor?`
-            : `Hello ${aiResponse.employee || 'there'}, ${visitorName} is waiting for you in the lobby. The purpose of their visit is ${purpose}. They are ready to speak with you now.`
-        };
-        
         // Use fallback employee if specified
         const targetEmployeeId = aiResponse.fallbackEmployeeId || aiResponse.employeeId;
         const targetEmployeeName = aiResponse.fallbackEmployee || aiResponse.employee;
+        
+        // Check if this is a CEO request by employee ID or title
+        const isCeoRequest = targetEmployeeId === 'emp012' || 
+                            (aiResponse.employee && aiResponse.employee.toLowerCase().includes('ceo')) ||
+                            (purpose && purpose.toLowerCase().includes('ceo'));
+        
+        // Create a scenario-like object for live calls
+        const liveCallScenario: DemoScenarioData = {
+          id: 'live-call',
+          employeeId: targetEmployeeId,
+          shouldConnect: true,
+          messages: [],
+          visitorName: visitorName,
+          visitorPurpose: purpose,
+          isCeoFlow: isCeoRequest, // Enable CEO flow if requesting CEO
+          ceoResponse: isCeoRequest 
+            ? `Please tell ${visitorName} to wait for 15 minutes. My PA will receive them from the lobby shortly.`
+            : undefined,
+          callMessage: isCeoRequest 
+            ? '' // CEO flow doesn't use standard call message
+            : aiResponse.fallbackEmployeeId 
+              ? `Hello ${aiResponse.fallbackEmployee || 'there'}, ${visitorName} is waiting in the lobby. They were looking for ${aiResponse.employee}, who is currently unavailable. The purpose of their visit is ${purpose}. I see your calendar is free. Could you kindly assist this visitor?`
+              : `Hello ${aiResponse.employee || 'there'}, ${visitorName} is waiting for you in the lobby. The purpose of their visit is ${purpose}. They are ready to speak with you now.`
+        };
         
         await initiateCall(targetEmployeeId, targetEmployeeName, liveCallScenario);
       }
@@ -633,7 +646,8 @@ export default function Home() {
       setConversationState('calling');
       
       // Play call connected sound
-      addLog(`✅ Call connected to CEO`);
+      const isCeoCall = scenario?.isCeoFlow || employee.title === 'CEO';
+      addLog(`✅ Call connected${isCeoCall ? ' to CEO' : ''}`);
       await callSoundsRef.current?.playCallConnectedSound();
       
       // Check if this is CEO flow with multi-speaker sequence
@@ -729,7 +743,8 @@ export default function Home() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         addLog(`🔊 AI relaying CEO's message to visitor...`);
         
-        const relayMessage = `Mr. CEO has requested you to kindly wait for 15 minutes. His PA will receive you from the reception shortly. Please take a seat, and if you need anything, feel free to contact me.`;
+        const visitorDisplayName = scenario.visitorName || 'sir/madam';
+        const relayMessage = `${employee.name} has requested you to kindly wait for 15 minutes. His PA will receive you from the reception shortly. Please take a seat, and if you need anything, feel free to contact me.`;
         
         addMessage(relayMessage, 'assistant');
         setConversationState('speaking');

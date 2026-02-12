@@ -187,6 +187,30 @@ Provide your response in JSON format only.`;
     if (aiResponse.intent === 'make_call' && aiResponse.employee) {
       let employee = findEmployeeByName(aiResponse.employee);
       
+      // Special handling for CEO requests
+      if (!employee && (
+        aiResponse.employee.toLowerCase().includes('ceo') ||
+        aiResponse.purposeOfVisit?.toLowerCase().includes('ceo') ||
+        message.toLowerCase().includes('ceo')
+      )) {
+        console.log('[CEO Request] Detected CEO request, routing to Abdullah Al Maktoum');
+        employee = EMPLOYEES.find(emp => emp.id === 'emp012' || emp.title === 'CEO') || null;
+        
+        if (employee) {
+          // Direct CEO connection - no availability check for CEO
+          return NextResponse.json({
+            intent: 'make_call',
+            response: `Certainly! I'll connect you with our CEO, ${employee.name}. Let me check their availability and notify them right away.`,
+            employee: employee.name,
+            employeeId: employee.id,
+            visitorName: aiResponse.visitorName,
+            purposeOfVisit: aiResponse.purposeOfVisit || 'Meeting with CEO',
+            canProceedWithCall: true,
+            isCeoRequest: true
+          });
+        }
+      }
+      
       // If no direct match, use Gemini to intelligently match the name
       if (!employee) {
         console.log(`[Smart Match] No direct match for "${aiResponse.employee}", using AI inference...`);
