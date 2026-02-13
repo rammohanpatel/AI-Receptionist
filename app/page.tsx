@@ -37,6 +37,7 @@ export default function Home() {
   const [demoLogs, setDemoLogs] = useState<string[]>([]);
   const [showProcessingIndicator, setShowProcessingIndicator] = useState(false);
   const [isUrgentCall, setIsUrgentCall] = useState(false);
+  const [displayMode, setDisplayMode] = useState<'none' | 'chat' | 'logs' | 'both'>('none');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -935,9 +936,36 @@ export default function Home() {
 
       {/* Main Content - Two Column Layout */}
       <div className="max-w-7xl mx-auto">
+        {/* Display Mode Dropdown - Show when session has started */}
+        {hasStarted && (
+          <div className={`fixed ${isCameraActive ? 'top-[340px]' : 'top-6'} left-6 z-[9998] transition-all duration-300`}>
+            <div className="glass-morphism rounded-xl border border-[#D4AF37]/30 shadow-xl overflow-hidden">
+              <label className="block px-4 pt-2 pb-1 text-xs text-gray-400 font-semibold tracking-wide">
+                Display Options
+              </label>
+              <select
+                value={displayMode}
+                onChange={(e) => setDisplayMode(e.target.value as 'none' | 'chat' | 'logs' | 'both')}
+                className="bg-[#0A0E27] text-[#D4AF37] px-4 pb-3 pr-10 text-sm font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#D4AF37] appearance-none w-full"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4AF37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundSize: '1.5em 1.5em',
+                }}
+              >
+                <option value="none">🚫 Show None</option>
+                <option value="chat">💬 Show Chat</option>
+                <option value="logs">📋 Show Logs</option>
+                <option value="both">📊 Show Both</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className={`flex gap-6 ${messages.length === 0 ? 'justify-center' : ''}`}>
-          {/* Left Column - Chat Section (Only show when there are messages) */}
-          {messages.length > 0 && (
+          {/* Left Column - Chat Section (Only show when displayMode includes chat) */}
+          {messages.length > 0 && (displayMode === 'chat' || displayMode === 'both') && (
             <div className="w-96 flex-shrink-0">
               <ConversationHistory messages={messages} showProcessing={showProcessingIndicator} />
             </div>
@@ -1106,7 +1134,7 @@ export default function Home() {
       />
 
       {/* Demo Logs - Fixed at bottom */}
-      {demoLogs.length > 0 && (
+      {demoLogs.length > 0 && (displayMode === 'logs' || displayMode === 'both') && (
         <div className="fixed bottom-6 right-6 z-[9998] w-96 max-h-80 glass-morphism border-2 border-[#D4AF37] rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-[#050816] px-4 py-3 border-b border-[#D4AF37]/30 flex items-center justify-between">
             <div className="flex items-center space-x-2">
