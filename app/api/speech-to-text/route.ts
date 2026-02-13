@@ -119,7 +119,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const transcript = googleData.results[0]?.alternatives[0]?.transcript || '';
+    const transcript = googleData.results
+      .map((result: any) => result.alternatives[0]?.transcript)
+      .join(' ')
+      .trim();
     console.log('[Google STT] Success! Transcription:', transcript);
 
     return NextResponse.json({
