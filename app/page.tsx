@@ -186,8 +186,13 @@ export default function Home() {
           if (heygenAvatarRef.current?.speak && heygenAvatarRef.current.isReady()) {
             try {
               const audioBuffer = await audioBlob.arrayBuffer();
+              // Send to HeyGen first
               await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Greeting sent to HeyGen for lip-sync');
+              
+              // Wait 400ms for HeyGen to start processing
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.log('⏱️ Lip-sync ready, playing greeting audio');
             } catch (error) {
               console.error('Error sending greeting to HeyGen:', error);
             }
@@ -265,8 +270,13 @@ export default function Home() {
         if (voiceType === 'female' && heygenAvatarRef.current?.speak) {
           try {
             const audioBuffer = await audioBlob.arrayBuffer();
+            // Send to HeyGen first
             await heygenAvatarRef.current.speak(audioBuffer);
             addLog(`🎭 Audio sent to HeyGen avatar for lip-sync`);
+            
+            // Wait 400ms for HeyGen to start processing and rendering lip-sync
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            addLog(`⏱️ Syncing lip-sync with audio...`);
           } catch (error) {
             console.error('Error sending audio to HeyGen:', error);
             addLog(`⚠ HeyGen lip-sync error - fallback to audio only`);
@@ -589,8 +599,13 @@ export default function Home() {
           if (heygenAvatarRef.current?.speak) {
             try {
               const audioBuffer = await audioBlob.arrayBuffer();
+              // Send to HeyGen first
               await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Audio sent to HeyGen avatar for lip-sync');
+              
+              // Wait 400ms for HeyGen to start processing and rendering
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.log('⏱️ Lip-sync synced, playing audio');
             } catch (error) {
               console.error('Error sending audio to HeyGen:', error);
             }
