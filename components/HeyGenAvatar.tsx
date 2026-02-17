@@ -11,6 +11,7 @@ interface HeyGenAvatarProps {
   state: ConversationState;
   isThinking?: boolean;
   onAudioToPlay?: (audioData: ArrayBuffer) => void;
+  onAvatarStartSpeaking?: () => void;
   autoStart?: boolean;
   useSandbox?: boolean;  // Enable sandbox mode for testing (no credit usage, 1 min limit)
 }
@@ -26,6 +27,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   state,
   isThinking,
   onAudioToPlay,
+  onAvatarStartSpeaking,
   autoStart = false,
   useSandbox = false  // Default to production mode
 }, ref) => {
@@ -33,7 +35,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [avatarState, setAvatarState] = useState<'idle' | 'listening' | 'speaking'>('idle');
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const roomRef = useRef<Room | null>(null);
   const heygenServiceRef = useRef<HeyGenAvatarService | null>(null);
@@ -43,7 +45,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   // Initialize HeyGen session
   const initializeSession = async () => {
     if (isInitialized || isConnecting) return;
-    
+
     setIsConnecting(true);
     setConnectionError(null);
 
@@ -87,7 +89,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
 
       room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
         console.log('📹 Track subscribed:', track.kind);
-        
+
         if (track.kind === Track.Kind.Video && videoRef.current) {
           const mediaStream = new MediaStream([track.mediaStreamTrack]);
           videoRef.current.srcObject = mediaStream;
@@ -117,6 +119,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
       heygenService.onSpeakStarted((eventId) => {
         console.log('🗣️ Avatar started speaking:', eventId);
         setAvatarState('speaking');
+        if (onAvatarStartSpeaking) onAvatarStartSpeaking();
       });
 
       heygenService.onSpeakEnded((eventId) => {
@@ -203,21 +206,21 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
     try {
       console.log('🎤 Converting audio to PCM 24kHz...');
       const audioBase64 = await convertAudioToPCM24kHz(audioBuffer);
-      
+
       console.log('📤 Sending audio to HeyGen in chunks...');
       const eventId = `speak_${Date.now()}`;
-      
+
       // Stream audio in ~1 second chunks
       let chunkCount = 0;
       for await (const chunk of streamAudioInChunks(audioBase64, 1000)) {
         await heygenServiceRef.current.speak(chunk, eventId);
         chunkCount++;
       }
-      
+
       // Signal end of speaking
       await heygenServiceRef.current.speakEnd(eventId);
       console.log(`✅ Sent ${chunkCount} audio chunks to HeyGen`);
-      
+
     } catch (error) {
       console.error('❌ Error sending audio to HeyGen:', error);
     }
@@ -252,7 +255,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   const getStateLabel = () => {
     if (isConnecting) return 'Connecting...';
     if (!isInitialized) return 'Ready to help';
-    
+
     switch (state) {
       case 'listening':
         return 'Listening...';
@@ -307,16 +310,16 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
           {/* Avatar placeholder image - shown when video not ready */}
           {!isInitialized && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Image 
-                src="/avatar1.png" 
-                alt="Avatar" 
+              <Image
+                src="/avatar1.png"
+                alt="Avatar"
                 fill
                 className="object-cover"
                 priority
               />
             </div>
           )}
-          
+
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -324,7 +327,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
             playsInline
             muted={false}
           />
-          
+
           {/* Loading overlay - only spinner, no button */}
           {isConnecting && (
             <div className="absolute inset-0 flex items-center justify-center bg-[#10213B] bg-opacity-70">
@@ -362,7 +365,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
             HeyGen LiveAvatar{useSandbox && ' (Sandbox)'} • Session: {sessionIdRef.current?.substring(0, 8)}...
           </p>
         )} */}
-        
+
         {/* Reactivate button - shown when avatar is initialized but might have stopped */}
         {isInitialized && !isConnecting && (
           <button

@@ -63,6 +63,17 @@ export default function Home() {
     };
   }, []);
 
+  // Ref to handle avatar speech synchronization
+  const avatarSpeechResolverRef = useRef<(() => void) | null>(null);
+
+  const handleAvatarStartSpeaking = () => {
+    console.log('🗣️ Avatar started speaking event received');
+    if (avatarSpeechResolverRef.current) {
+      avatarSpeechResolverRef.current();
+      avatarSpeechResolverRef.current = null;
+    }
+  };
+
   // Auto-scroll demo logs to bottom when new logs are added
   useEffect(() => {
     if (demoLogsRef.current) {
@@ -187,15 +198,25 @@ export default function Home() {
             try {
               const audioBuffer = await audioBlob.arrayBuffer();
               // Send to HeyGen first
-              await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Greeting sent to HeyGen for lip-sync');
+              const speechPromise = new Promise<void>((resolve) => {
+                avatarSpeechResolverRef.current = resolve;
+                // Fallback timeout in case event never fires (10s)
+                setTimeout(() => {
+                  if (avatarSpeechResolverRef.current) {
+                    console.log('⚠️ Avatar speech event timeout - playing audio anyway');
+                    resolve();
+                    avatarSpeechResolverRef.current = null;
+                  }
+                }, 10000);
+              });
 
-              // Wait 2500ms for HeyGen to start processing (increased for greeting sync)
-              if (isDemoMode) {
-                await new Promise(resolve => setTimeout(resolve, 5000));
-              }
-              await new Promise(resolve => setTimeout(resolve, 1600));
-              console.log('⏱️ Lip-sync ready, playing greeting audio');
+              await heygenAvatarRef.current.speak(audioBuffer);
+
+              // Wait for the avatar to actually start speaking
+              console.log('⏳ Waiting for avatar to start speaking...');
+              await speechPromise;
+              console.log('🗣️ Avatar started speaking, playing audio now');
             } catch (error) {
               console.error('Error sending greeting to HeyGen:', error);
             }
@@ -1109,6 +1130,7 @@ export default function Home() {
                 }}
                 state={conversationState}
                 isThinking={isProcessing}
+                onAvatarStartSpeaking={handleAvatarStartSpeaking}
                 autoStart={hasStarted}
                 useSandbox={false}  // Enable sandbox mode for testing (disable in production)
               />
