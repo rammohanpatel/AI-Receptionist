@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Avatar from '@/components/Avatar';
+import HeyGenAvatar from '@/components/HeyGenAvatar';
 import CallUI from '@/components/CallUI';
 import ConversationHistory from '@/components/ConversationHistory';
 import Controls from '@/components/Controls';
@@ -52,6 +53,7 @@ export default function Home() {
   const callSoundsRef = useRef<CallSounds | null>(null);
   const currentScenarioRef = useRef<DemoScenarioData | null>(null);
   const countdownRef = useRef<HTMLDivElement | null>(null);
+  const heygenAvatarRef = useRef<any>(null);
 
   // Initialize call sounds
   useEffect(() => {
@@ -209,7 +211,7 @@ export default function Home() {
     console.log(`[DEMO LOG] ${message}`);
   };
 
-  // Play audio with voice synthesis
+  // Play audio with voice synthesis and send to HeyGen
   const playAudio = async (text: string, voiceType: 'male' | 'female' = 'female') => {
     try {
       addLog(`🔊 Synthesizing ${voiceType} voice: "${text.substring(0, 50)}..."`);
@@ -223,6 +225,18 @@ export default function Home() {
       if (ttsResponse.ok) {
         const audioBlob = await ttsResponse.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Send audio to HeyGen for lip-sync
+        if (heygenAvatarRef.current?.speak) {
+          try {
+            const audioBuffer = await audioBlob.arrayBuffer();
+            await heygenAvatarRef.current.speak(audioBuffer);
+            addLog(`🎭 Audio sent to HeyGen avatar for lip-sync`);
+          } catch (error) {
+            console.error('Error sending audio to HeyGen:', error);
+            addLog(`⚠ HeyGen lip-sync error - fallback to audio only`);
+          }
+        }
         
         if (audioRef.current) {
           audioRef.current.pause();
@@ -516,6 +530,17 @@ export default function Home() {
         if (ttsResponse.ok) {
           const audioBlob = await ttsResponse.blob();
           const audioUrl = URL.createObjectURL(audioBlob);
+          
+          // Send audio to HeyGen for lip-sync
+          if (heygenAvatarRef.current?.speak) {
+            try {
+              const audioBuffer = await audioBlob.arrayBuffer();
+              await heygenAvatarRef.current.speak(audioBuffer);
+              console.log('🎭 Audio sent to HeyGen avatar for lip-sync');
+            } catch (error) {
+              console.error('Error sending audio to HeyGen:', error);
+            }
+          }
           
           if (audioRef.current) {
             audioRef.current.pause();
@@ -987,7 +1012,17 @@ export default function Home() {
           <div className={messages.length === 0 ? 'w-full max-w-5xl mx-auto' : 'flex-1'}>
             {/* Avatar Section */}
             <div className="mb-8">
-              <Avatar state={conversationState} isThinking={isProcessing} />
+              <HeyGenAvatar 
+                ref={(el) => {
+                  if (el) {
+                    heygenAvatarRef.current = el;
+                  }
+                }}
+                state={conversationState} 
+                isThinking={isProcessing}
+                autoStart={hasStarted}
+                useSandbox={true}  // Enable sandbox mode for testing (disable in production)
+              />
             </div>
 
             {/* Controls */}
