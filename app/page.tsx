@@ -73,9 +73,9 @@ export default function Home() {
   // Auto-scroll to countdown timer when it appears
   useEffect(() => {
     if (countdown !== undefined && countdown > 0 && countdownRef.current) {
-      countdownRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
+      countdownRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
       });
     }
   }, [countdown]);
@@ -97,22 +97,22 @@ export default function Home() {
   const startCamera = async () => {
     try {
       console.log('Requesting camera access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 640 }, 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: 'user'
-        } 
+        }
       });
       console.log('Camera stream obtained:', stream);
       console.log('Video tracks:', stream.getVideoTracks());
-      
+
       videoStreamRef.current = stream;
       setIsCameraActive(true);
-      
+
       // Wait a bit for state to update, then set video source
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       if (videoRef.current) {
         console.log('Setting video srcObject');
         videoRef.current.srcObject = stream;
@@ -143,20 +143,20 @@ export default function Home() {
   const playGreetingAudio = async () => {
     if (!hasGreetedRef.current) {
       hasGreetedRef.current = true;
-      
+
       // Wait for avatar to be ready before greeting
       if (heygenAvatarRef.current && !heygenAvatarRef.current.isReady()) {
         console.log('🕒 Waiting for HeyGen avatar to initialize...');
         addLog('🎭 Initializing avatar...');
-        
+
         // Wait up to 10 seconds for avatar to initialize
         const maxWaitTime = 10000;
         const startTime = Date.now();
-        
+
         while (!heygenAvatarRef.current.isReady() && (Date.now() - startTime) < maxWaitTime) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
-        
+
         if (heygenAvatarRef.current.isReady()) {
           console.log('✅ Avatar ready!');
           addLog('✅ Avatar initialized - starting greeting');
@@ -165,12 +165,12 @@ export default function Home() {
           addLog('⚠ Avatar timeout - greeting without lip-sync');
         }
       }
-      
+
       const greetingText = 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?';
-      
+
       // Add greeting message to conversation
       addMessage(greetingText, 'assistant');
-      
+
       try {
         const ttsResponse = await fetch('/api/elevenlabs-tts', {
           method: 'POST',
@@ -181,7 +181,7 @@ export default function Home() {
         if (ttsResponse.ok) {
           const audioBlob = await ttsResponse.blob();
           const audioUrl = URL.createObjectURL(audioBlob);
-          
+
           // Send audio to HeyGen for lip-sync
           if (heygenAvatarRef.current?.speak && heygenAvatarRef.current.isReady()) {
             try {
@@ -189,18 +189,18 @@ export default function Home() {
               // Send to HeyGen first
               await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Greeting sent to HeyGen for lip-sync');
-              
+
               // Wait 2500ms for HeyGen to start processing (increased for greeting sync)
-              if(isDemoMode) {
-                  await new Promise(resolve => setTimeout(resolve, 5000));
-                }
+              if (isDemoMode) {
+                await new Promise(resolve => setTimeout(resolve, 5000));
+              }
               await new Promise(resolve => setTimeout(resolve, 1600));
               console.log('⏱️ Lip-sync ready, playing greeting audio');
             } catch (error) {
               console.error('Error sending greeting to HeyGen:', error);
             }
           }
-          
+
           const audio = new Audio(audioUrl);
           audio.onended = () => URL.revokeObjectURL(audioUrl);
           await audio.play().catch(() => {
@@ -220,10 +220,10 @@ export default function Home() {
   const handleStart = async () => {
     setHasStarted(true);
     hasInteractedRef.current = true;
-    
+
     // Start camera
     await startCamera();
-    
+
     // Play greeting
     await playGreetingAudio();
   };
@@ -244,7 +244,7 @@ export default function Home() {
   };
 
   const addLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
+    const timestamp = new Date().toLocaleTimeString('en-US', {
       timeZone: 'Asia/Dubai',
       hour: '2-digit',
       minute: '2-digit',
@@ -258,7 +258,7 @@ export default function Home() {
   const playAudio = async (text: string, voiceType: 'male' | 'female' = 'female') => {
     try {
       addLog(`🔊 Synthesizing ${voiceType} voice: "${text.substring(0, 50)}..."`);
-      
+
       const ttsResponse = await fetch('/api/elevenlabs-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -268,7 +268,7 @@ export default function Home() {
       if (ttsResponse.ok) {
         const audioBlob = await ttsResponse.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
-        
+
         // Send audio to HeyGen for lip-sync ONLY when receptionist speaks (female voice)
         if (voiceType === 'female' && heygenAvatarRef.current?.speak) {
           try {
@@ -276,7 +276,7 @@ export default function Home() {
             // Send to HeyGen first
             await heygenAvatarRef.current.speak(audioBuffer);
             addLog(`🎭 Audio sent to HeyGen avatar for lip-sync`);
-            
+
             // Wait 400ms for HeyGen to start processing and rendering lip-sync
             await new Promise(resolve => setTimeout(resolve, 1000));
             addLog(`⏱️ Syncing lip-sync with audio...`);
@@ -287,14 +287,14 @@ export default function Home() {
         } else if (voiceType === 'male') {
           addLog(`👤 User speaking - avatar idle`);
         }
-        
+
         if (audioRef.current) {
           audioRef.current.pause();
           audioRef.current = null;
         }
-        
+
         audioRef.current = new Audio(audioUrl);
-        
+
         return new Promise<void>((resolve) => {
           if (audioRef.current) {
             audioRef.current.onended = () => {
@@ -333,29 +333,29 @@ export default function Home() {
     currentScenarioRef.current = scenario;
 
     addLog(`🎬 Starting demo scenario: ${scenarioId}`);
-    
+
     // Reset state
     setMessages([]);
     setDemoLogs([]);
     setHasStarted(true);
     setIsDemoMode(true);
     hasInteractedRef.current = true;
-    
+
     // Start camera
     addLog(`📹 Activating camera...`);
     await startCamera();
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // Wait for avatar to initialize before playing first message
     if (heygenAvatarRef.current && !heygenAvatarRef.current.isReady()) {
       addLog(`🎭 Waiting for avatar to initialize...`);
       const maxWaitTime = 10000;
       const startTime = Date.now();
-      
+
       while (!heygenAvatarRef.current.isReady() && (Date.now() - startTime) < maxWaitTime) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
+
       if (heygenAvatarRef.current.isReady()) {
         addLog(`✅ Avatar ready - starting demo`);
       } else {
@@ -367,29 +367,29 @@ export default function Home() {
     for (let i = 0; i < scenario.messages.length; i++) {
       const msg = scenario.messages[i];
       const nextMsg = scenario.messages[i + 1];
-      
+
       await new Promise(resolve => setTimeout(resolve, msg.delay));
-      
+
       // Hide processing indicator right before showing the message
       setShowProcessingIndicator(false);
-      
+
       addLog(`💬 ${msg.role === 'user' ? 'User' : 'AI'}: "${msg.content.substring(0, 50)}..."`);
-      
+
       // Add message to conversation
       addMessage(msg.content, msg.role);
-      
+
       // Set conversation state
       if (msg.role === 'assistant') {
         setConversationState('speaking');
       }
-      
+
       // Play audio if requested
       if (msg.useVoice && msg.voiceType) {
         await playAudio(msg.content, msg.voiceType);
       }
-      
+
       setConversationState('idle');
-      
+
       // Show processing indicator before next AI message
       if (nextMsg && nextMsg.role === 'assistant' && msg.role === 'user') {
         setShowProcessingIndicator(true);
@@ -485,7 +485,7 @@ export default function Home() {
     try {
       // Show processing indicator
       setShowProcessingIndicator(true);
-      
+
       // Step 1: Speech to Text
       const formData = new FormData();
       formData.append('audio', audioBlob);
@@ -500,7 +500,7 @@ export default function Home() {
       }
 
       const { text } = await sttResponse.json();
-      
+
       if (!text || text.trim() === '') {
         showNotification('I didn\'t catch that. Could you please repeat?', 'error');
         setIsProcessing(false);
@@ -526,7 +526,7 @@ export default function Home() {
       }
 
       const aiResponse = await chatResponse.json();
-      
+
       // Hide processing indicator before speaking
       setShowProcessingIndicator(false);
 
@@ -538,16 +538,16 @@ export default function Home() {
         // Extract visitor name and purpose for the call message
         const visitorName = aiResponse.visitorName || 'A visitor';
         const purpose = aiResponse.purposeOfVisit || 'to meet with you';
-        
+
         // Use fallback employee if specified
         const targetEmployeeId = aiResponse.fallbackEmployeeId || aiResponse.employeeId;
         const targetEmployeeName = aiResponse.fallbackEmployee || aiResponse.employee;
-        
+
         // Check if this is a CEO request by employee ID or title
-        const isCeoRequest = targetEmployeeId === 'emp012' || 
-                            (aiResponse.employee && aiResponse.employee.toLowerCase().includes('ceo')) ||
-                            (purpose && purpose.toLowerCase().includes('ceo'));
-        
+        const isCeoRequest = targetEmployeeId === 'emp012' ||
+          (aiResponse.employee && aiResponse.employee.toLowerCase().includes('ceo')) ||
+          (purpose && purpose.toLowerCase().includes('ceo'));
+
         // Create a scenario-like object for live calls
         const liveCallScenario: DemoScenarioData = {
           id: 'live-call',
@@ -557,16 +557,16 @@ export default function Home() {
           visitorName: visitorName,
           visitorPurpose: purpose,
           isCeoFlow: isCeoRequest, // Enable CEO flow if requesting CEO
-          ceoResponse: isCeoRequest 
+          ceoResponse: isCeoRequest
             ? `Please tell ${visitorName} to wait for 15 minutes. My PA will receive them from the lobby shortly.`
             : undefined,
-          callMessage: isCeoRequest 
+          callMessage: isCeoRequest
             ? '' // CEO flow doesn't use standard call message
-            : aiResponse.fallbackEmployeeId 
+            : aiResponse.fallbackEmployeeId
               ? `Hello ${aiResponse.fallbackEmployee || 'there'}, ${visitorName} is waiting in the lobby. They were looking for ${aiResponse.employee}, who is currently unavailable. The purpose of their visit is ${purpose}. I see your calendar is free. Could you kindly assist this visitor?`
               : `Hello ${aiResponse.employee || 'there'}, ${visitorName} is waiting for you in the lobby. The purpose of their visit is ${purpose}. They are ready to speak with you now.`
         };
-        
+
         await initiateCall(targetEmployeeId, targetEmployeeName, liveCallScenario);
       }
 
@@ -586,7 +586,7 @@ export default function Home() {
 
     if (role === 'assistant') {
       setConversationState('speaking');
-      
+
       try {
         const ttsResponse = await fetch('/api/elevenlabs-tts', {
           method: 'POST',
@@ -597,7 +597,7 @@ export default function Home() {
         if (ttsResponse.ok) {
           const audioBlob = await ttsResponse.blob();
           const audioUrl = URL.createObjectURL(audioBlob);
-          
+
           // Send audio to HeyGen for lip-sync (only for assistant/receptionist)
           if (heygenAvatarRef.current?.speak) {
             try {
@@ -605,7 +605,7 @@ export default function Home() {
               // Send to HeyGen first
               await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Audio sent to HeyGen avatar for lip-sync');
-              
+
               // Wait 400ms for HeyGen to start processing and rendering
               await new Promise(resolve => setTimeout(resolve, 1000));
               console.log('⏱️ Lip-sync synced, playing audio');
@@ -613,12 +613,12 @@ export default function Home() {
               console.error('Error sending audio to HeyGen:', error);
             }
           }
-          
+
           if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current = null;
           }
-          
+
           audioRef.current = new Audio(audioUrl);
           audioRef.current.onended = () => {
             setConversationState('idle');
@@ -629,7 +629,7 @@ export default function Home() {
             setConversationState('idle');
             URL.revokeObjectURL(audioUrl);
           };
-          
+
           // Try to play, handle autoplay policy
           try {
             await audioRef.current.play();
@@ -663,7 +663,7 @@ export default function Home() {
     if (!employee) return;
 
     setPendingEmployee(employee);
-    
+
     // Show notification about connecting (urgent if applicable)
     if (scenario?.isUrgent) {
       showNotification(`🚨 URGENT: Escalating to ${employeeName || employee.name}...`, 'error');
@@ -673,13 +673,13 @@ export default function Home() {
 
     // Simplified notification - Just AI sending message to employee
     const messages: NotificationMessage[] = [];
-    
+
     // AI sends notification message (after 1 second)
     setTimeout(() => {
       messages.push({
         id: 1,
         sender: 'ai',
-        content: scenario?.isUrgent 
+        content: scenario?.isUrgent
           ? `🚨 URGENT: ${employee.name}, the AI receptionist needs immediate assistance at reception. A visitor requires human help.`
           : `Hi ${employee.name}, there's a visitor at reception who would like to speak with you regarding ${employee.department} matters. Connecting you now...`,
         timestamp: new Date(),
@@ -703,7 +703,7 @@ export default function Home() {
     // Close modal and start countdown with ringing sound (after 5 seconds)
     setTimeout(() => {
       setIsNotificationModalOpen(false);
-      
+
       // Start ringing sound (urgent or normal)
       if (scenario?.isUrgent) {
         addLog(`🚨 URGENT call ringing...`);
@@ -712,15 +712,15 @@ export default function Home() {
         addLog(`🔊 Call ringing...`);
         callSoundsRef.current?.startRinging(false);
       }
-      
+
       // Start countdown
       let count = 5;
       setCountdown(count);
-      
+
       const countdownInterval = setInterval(() => {
         count -= 1;
         setCountdown(count);
-        
+
         if (count <= 0) {
           clearInterval(countdownInterval);
           setCountdown(undefined);
@@ -742,22 +742,22 @@ export default function Home() {
       setCurrentEmployee(employee);
       setIsCallActive(true);
       setConversationState('calling');
-      
+
       // Play call connected sound
       const isCeoCall = scenario?.isCeoFlow || employee.title === 'CEO';
       addLog(`✅ Call connected${isCeoCall ? ' to CEO' : ''}`);
       await callSoundsRef.current?.playCallConnectedSound();
-      
+
       // Check if this is CEO flow with multi-speaker sequence
       if (scenario?.isCeoFlow && scenario?.ceoResponse) {
         // CEO Flow: AI speaks, CEO responds, AI relays
-        
+
         // Step 1: AI informs CEO about visitor
         addLog(`🔊 AI informing CEO about visitor...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         const aiToCeoMessage = `Hello, this is the AI receptionist. ${scenario.visitorName} is in the lobby requesting to meet with you. Shall I ask them to wait?`;
-        
+
         try {
           const aiResponse = await fetch('/api/elevenlabs-tts', {
             method: 'POST',
@@ -769,7 +769,7 @@ export default function Home() {
             const audioBlob = await aiResponse.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
-            
+
             await new Promise<void>((resolve) => {
               audio.onended = () => {
                 addLog(`✓ Message delivered to CEO`);
@@ -789,11 +789,11 @@ export default function Home() {
         } catch (error: any) {
           addLog(`⚠ TTS error: ${error.message}`);
         }
-        
+
         // Step 2: CEO responds (using male voice)
         addLog(`🎙️ CEO responding...`);
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         try {
           const ceoResponse = await fetch('/api/elevenlabs-tts', {
             method: 'POST',
@@ -805,7 +805,7 @@ export default function Home() {
             const audioBlob = await ceoResponse.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
-            
+
             await new Promise<void>((resolve) => {
               audio.onended = () => {
                 addLog(`✓ CEO response received`);
@@ -825,28 +825,28 @@ export default function Home() {
         } catch (error: any) {
           addLog(`⚠ TTS error: ${error.message}`);
         }
-        
+
         // Step 3: CEO ends call manually
         addLog(`📞 CEO ending call...`);
         await new Promise(resolve => setTimeout(resolve, 1500));
         await callSoundsRef.current?.playCallEndSound();
         addLog(`✓ Call ended by CEO`);
-        
+
         // End the call
         setIsCallActive(false);
         setCurrentEmployee(null);
         setConversationState('idle');
-        
+
         // Step 4: AI relays CEO's message to visitor
         await new Promise(resolve => setTimeout(resolve, 1000));
         addLog(`🔊 AI relaying CEO's message to visitor...`);
-        
+
         const visitorDisplayName = scenario.visitorName || 'sir/madam';
         const relayMessage = `${employee.name} has requested you to kindly wait for 15 minutes. His PA will receive you from the reception shortly. Please take a seat, and if you need anything, feel free to contact me.`;
-        
+
         addMessage(relayMessage, 'assistant');
         setConversationState('speaking');
-        
+
         try {
           const relayResponse = await fetch('/api/elevenlabs-tts', {
             method: 'POST',
@@ -856,9 +856,26 @@ export default function Home() {
 
           if (relayResponse.ok) {
             const audioBlob = await relayResponse.blob();
+
+            // Send audio to HeyGen for lip-sync (only for assistant/receptionist)
+            if (heygenAvatarRef.current?.speak) {
+              try {
+                const audioBuffer = await audioBlob.arrayBuffer();
+                // Send to HeyGen first
+                await heygenAvatarRef.current.speak(audioBuffer);
+                console.log('🎭 Audio sent to HeyGen avatar for lip-sync (CEO relay)');
+
+                // Wait for HeyGen to start processing and rendering
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                console.log('⏱️ Lip-sync synced, playing audio');
+              } catch (error) {
+                console.error('Error sending audio to HeyGen:', error);
+              }
+            }
+
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
-            
+
             await new Promise<void>((resolve) => {
               audio.onended = () => {
                 addLog(`✓ Message relayed to visitor`);
@@ -884,12 +901,12 @@ export default function Home() {
           addLog(`⚠ TTS error: ${error.message}`);
           setConversationState('idle');
         }
-        
+
       } else if (scenario?.callMessage) {
         // Standard flow (non-CEO)
         addLog(`🔊 Reading message to ${employee.name}...`);
         await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause after connection
-        
+
         try {
           // Use TTS to speak the call message
           const ttsResponse = await fetch('/api/elevenlabs-tts', {
@@ -901,9 +918,9 @@ export default function Home() {
           if (ttsResponse.ok) {
             const audioBlob = await ttsResponse.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
-            
+
             const audio = new Audio(audioUrl);
-            
+
             // Wait for audio to finish
             await new Promise<void>((resolve) => {
               audio.onended = () => {
@@ -928,13 +945,13 @@ export default function Home() {
         } catch (error: any) {
           addLog(`⚠ TTS error: ${error.message}`);
         }
-        
+
         // Auto-end call after message is delivered
         addLog(`📞 Ending call...`);
         await new Promise(resolve => setTimeout(resolve, 1500)); // Brief pause
         await callSoundsRef.current?.playCallEndSound();
         addLog(`✓ Call ended`);
-        
+
         // End the call
         setTimeout(() => {
           endCall();
@@ -949,7 +966,7 @@ export default function Home() {
     setConversationState('idle');
     setIsUrgentCall(false); // Reset urgent flag
     showNotification('Call ended', 'info');
-    
+
     // Ask if there's anything else
     setTimeout(() => {
       speakAndAddMessage('Is there anything else I can help you with?', 'assistant');
@@ -968,9 +985,9 @@ export default function Home() {
       {/* DHRE Logo - Top Left Corner (Only on landing page) */}
       {!hasStarted && (
         <div className="fixed top-6 left-6 z-[9999]">
-          <img 
-            src="/DHRE.png" 
-            alt="DHRE Logo" 
+          <img
+            src="/DHRE.png"
+            alt="DHRE Logo"
             className="h-24 w-auto object-contain"
           />
         </div>
@@ -979,9 +996,9 @@ export default function Home() {
       {/* DigitalAbbot Logo - Bottom Right Corner (Only on landing page) */}
       {!hasStarted && (
         <div className="fixed bottom-6 right-6 z-[9999]">
-          <img 
-            src="/DigitalAbbot.png" 
-            alt="DigitalAbbot Logo" 
+          <img
+            src="/DigitalAbbot.png"
+            alt="DigitalAbbot Logo"
             className="h-20 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
           />
         </div>
@@ -1027,7 +1044,7 @@ export default function Home() {
           Innovation Lab Virtual Concierge
         </p>
         <p className="text-sm text-gray-400 mt-2 font-light tracking-widest uppercase">
-          AI Receptionist @ Innovation Lab (DHRE) • Powered by DigitAlchemy® 
+          AI Receptionist @ Innovation Lab (DHRE) • Powered by DigitAlchemy®
         </p>
       </div>
 
@@ -1072,7 +1089,7 @@ export default function Home() {
           {!hasStarted && messages.length === 0 && (
             <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[100] w-80">
               <div className="glass-morphism p-6 rounded-2xl border-2 border-[#D4AF37]/30 shadow-2xl">
-                <VerticalDemoScenarios 
+                <VerticalDemoScenarios
                   onSelectScenario={handleDemoScenario}
                   disabled={isDemoMode}
                 />
@@ -1084,13 +1101,13 @@ export default function Home() {
           <div className={messages.length === 0 ? 'w-full max-w-5xl mx-auto' : 'flex-1'}>
             {/* Avatar Section */}
             <div className="mb-8">
-              <HeyGenAvatar 
+              <HeyGenAvatar
                 ref={(el) => {
                   if (el) {
                     heygenAvatarRef.current = el;
                   }
                 }}
-                state={conversationState} 
+                state={conversationState}
                 isThinking={isProcessing}
                 autoStart={hasStarted}
                 useSandbox={false}  // Enable sandbox mode for testing (disable in production)
@@ -1108,12 +1125,12 @@ export default function Home() {
                       className="group relative inline-flex items-center justify-center px-16 py-7 text-2xl font-bold text-[#0A0E27] bg-gradient-to-r from-[#D4AF37] via-[#F0C852] to-[#D4AF37] rounded-full shadow-2xl hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-[#F0C852] overflow-hidden"
                     >
                       <span className="absolute inset-0 bg-gradient-to-r from-[#F0C852] via-[#D4AF37] to-[#F0C852] opacity-0 group-hover:opacity-100 transition-opacity duration-500 shimmer"></span>
-                      <svg 
-                        className="w-10 h-10 mr-4 z-10" 
+                      <svg
+                        className="w-10 h-10 mr-4 z-10"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path d="M8 5v14l11-7z"/>
+                        <path d="M8 5v14l11-7z" />
                       </svg>
                       <span className="z-10 tracking-wide">Start Live Session</span>
                       <div className="absolute -inset-1 bg-gradient-to-r from-[#D4AF37] to-[#F0C852] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
@@ -1132,8 +1149,8 @@ export default function Home() {
                       onClick={exitDemo}
                       className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-xl hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-red-500"
                     >
-                      <svg 
-                        className="w-6 h-6 mr-3" 
+                      <svg
+                        className="w-6 h-6 mr-3"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1143,32 +1160,32 @@ export default function Home() {
                       <span className="tracking-wide">Exit</span>
                     </button>
                   </div>
-                  </>
+                </>
                 ) : (
                   <>
-                  <Controls
-                    isListening={isListening}
-                    isProcessing={isProcessing}
-                    onStartListening={startListening}
-                    onStopListening={stopListening}
-                    disabled={conversationState === 'calling'}
-                  />
-                  <div className="flex justify-center mb-8">
-                    <button
-                      onClick={exitDemo}
-                      className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-xl hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-red-500"
-                    >
-                      <svg 
-                        className="w-6 h-6 mr-3" 
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <Controls
+                      isListening={isListening}
+                      isProcessing={isProcessing}
+                      onStartListening={startListening}
+                      onStopListening={stopListening}
+                      disabled={conversationState === 'calling'}
+                    />
+                    <div className="flex justify-center mb-8">
+                      <button
+                        onClick={exitDemo}
+                        className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-xl hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transform hover:scale-105 transition-all duration-300 focus:outline-none border-2 border-red-500"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      <span className="tracking-wide">Exit</span>
-                    </button>
-                  </div>
+                        <svg
+                          className="w-6 h-6 mr-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span className="tracking-wide">Exit</span>
+                      </button>
+                    </div>
                   </>
                 )}
               </>
@@ -1181,7 +1198,7 @@ export default function Home() {
               </div>
             )}
 
-            
+
 
             {/* Countdown Display */}
             {countdown !== undefined && countdown > 0 && (
@@ -1201,32 +1218,32 @@ export default function Home() {
                     <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
-              </div>
-              <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Voice Intelligence</h3>
-              <p className="text-sm text-gray-300 leading-relaxed font-light">Natural language processing with human-like understanding</p>
-            </div>
+                  </div>
+                  <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Voice Intelligence</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed font-light">Natural language processing with human-like understanding</p>
+                </div>
 
-            <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
-                <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Smart Routing</h3>
-              <p className="text-sm text-gray-300 leading-relaxed font-light">Intelligent connection to the perfect contact instantly</p>
-            </div>
+                <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
+                    <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Smart Routing</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed font-light">Intelligent connection to the perfect contact instantly</p>
+                </div>
 
-            <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
-                <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
+                <div className="glass-morphism p-8 rounded-2xl shadow-2xl text-center hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 group hover:scale-105 border border-[#D4AF37]/30">
+                  <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#C5A028] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all duration-300">
+                    <svg className="w-8 h-8 text-[#0A0E27]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Instant Connect</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed font-light">Seamless communication established in moments</p>
+                </div>
               </div>
-              <h3 className="font-bold text-[#D4AF37] mb-3 text-lg tracking-wide">Instant Connect</h3>
-              <p className="text-sm text-gray-300 leading-relaxed font-light">Seamless communication established in moments</p>
-            </div>
-          </div>
-        )}
+            )}
           </div>
         </div>
       </div>
