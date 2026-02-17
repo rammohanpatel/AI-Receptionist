@@ -303,7 +303,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
         )}
 
         {/* Video Element */}
-        <div className={`relative w-80 h-80 rounded-full overflow-hidden border-4 ${getStateColor()} shadow-2xl bg-gray-900`}>
+        <div className={`relative ${isInitialized ? 'w-[70vh] h-[70vh]' : 'w-80 h-80'} rounded-full overflow-hidden border-4 ${getStateColor()} shadow-2xl bg-[#10213B]`}>
           {/* Avatar placeholder image - shown when video not ready */}
           {!isInitialized && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -327,7 +327,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
           
           {/* Loading overlay - only spinner, no button */}
           {isConnecting && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-70">
+            <div className="absolute inset-0 flex items-center justify-center bg-[#10213B] bg-opacity-70">
               <div className="text-center text-white p-6">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37] mx-auto mb-4"></div>
                 <p className="text-sm">Initializing </p>
@@ -362,6 +362,16 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
             HeyGen LiveAvatar{useSandbox && ' (Sandbox)'} • Session: {sessionIdRef.current?.substring(0, 8)}...
           </p>
         )} */}
+        
+        {/* Reactivate button - shown when avatar is initialized but might have stopped */}
+        {isInitialized && !isConnecting && (
+          <button
+            onClick={initializeSession}
+            className="mt-4 px-6 py-2 bg-[#D4AF37] text-[#10213B] rounded-full hover:bg-[#F0C852] transition-all font-semibold shadow-lg"
+          >
+            Reactivate
+          </button>
+        )}
       </div>
     </div>
   );

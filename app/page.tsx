@@ -191,7 +191,7 @@ export default function Home() {
               console.log('🎭 Greeting sent to HeyGen for lip-sync');
               
               // Wait 400ms for HeyGen to start processing
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 1600));
               console.log('⏱️ Lip-sync ready, playing greeting audio');
             } catch (error) {
               console.error('Error sending greeting to HeyGen:', error);
