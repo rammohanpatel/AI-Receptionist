@@ -250,7 +250,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   };
 
   const getStateLabel = () => {
-    if (isConnecting) return 'Connecting to avatar...';
+    if (isConnecting) return 'Connecting...';
     if (!isInitialized) return 'Ready to help';
     
     switch (state) {
@@ -357,11 +357,11 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
         <p className="text-2xl font-semibold text-white mb-2">
           {getStateLabel()}
         </p>
-        {isInitialized && (
+        {/* {isInitialized && (
           <p className="text-sm text-gray-400">
             HeyGen LiveAvatar{useSandbox && ' (Sandbox)'} • Session: {sessionIdRef.current?.substring(0, 8)}...
           </p>
-        )}
+        )} */}
       </div>
     </div>
   );
