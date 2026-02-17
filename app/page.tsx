@@ -139,10 +139,33 @@ export default function Home() {
     setIsCameraActive(false);
   };
 
-  // Play greeting audio with text message
+  // Play greeting audio with text message - waits for avatar to be ready
   const playGreetingAudio = async () => {
     if (!hasGreetedRef.current) {
       hasGreetedRef.current = true;
+      
+      // Wait for avatar to be ready before greeting
+      if (heygenAvatarRef.current && !heygenAvatarRef.current.isReady()) {
+        console.log('🕒 Waiting for HeyGen avatar to initialize...');
+        addLog('🎭 Initializing avatar...');
+        
+        // Wait up to 10 seconds for avatar to initialize
+        const maxWaitTime = 10000;
+        const startTime = Date.now();
+        
+        while (!heygenAvatarRef.current.isReady() && (Date.now() - startTime) < maxWaitTime) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        if (heygenAvatarRef.current.isReady()) {
+          console.log('✅ Avatar ready!');
+          addLog('✅ Avatar initialized - starting greeting');
+        } else {
+          console.log('⚠ Avatar initialization timeout - continuing anyway');
+          addLog('⚠ Avatar timeout - greeting without lip-sync');
+        }
+      }
+      
       const greetingText = 'Welcome to the Innovation Lab at Dubai Holding Real Estate. May I get your name, please?';
       
       // Add greeting message to conversation
@@ -158,6 +181,18 @@ export default function Home() {
         if (ttsResponse.ok) {
           const audioBlob = await ttsResponse.blob();
           const audioUrl = URL.createObjectURL(audioBlob);
+          
+          // Send audio to HeyGen for lip-sync
+          if (heygenAvatarRef.current?.speak && heygenAvatarRef.current.isReady()) {
+            try {
+              const audioBuffer = await audioBlob.arrayBuffer();
+              await heygenAvatarRef.current.speak(audioBuffer);
+              console.log('🎭 Greeting sent to HeyGen for lip-sync');
+            } catch (error) {
+              console.error('Error sending greeting to HeyGen:', error);
+            }
+          }
+          
           const audio = new Audio(audioUrl);
           audio.onended = () => URL.revokeObjectURL(audioUrl);
           await audio.play().catch(() => {
@@ -226,8 +261,8 @@ export default function Home() {
         const audioBlob = await ttsResponse.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         
-        // Send audio to HeyGen for lip-sync
-        if (heygenAvatarRef.current?.speak) {
+        // Send audio to HeyGen for lip-sync ONLY when receptionist speaks (female voice)
+        if (voiceType === 'female' && heygenAvatarRef.current?.speak) {
           try {
             const audioBuffer = await audioBlob.arrayBuffer();
             await heygenAvatarRef.current.speak(audioBuffer);
@@ -236,6 +271,8 @@ export default function Home() {
             console.error('Error sending audio to HeyGen:', error);
             addLog(`⚠ HeyGen lip-sync error - fallback to audio only`);
           }
+        } else if (voiceType === 'male') {
+          addLog(`👤 User speaking - avatar idle`);
         }
         
         if (audioRef.current) {
@@ -295,6 +332,23 @@ export default function Home() {
     addLog(`📹 Activating camera...`);
     await startCamera();
     await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Wait for avatar to initialize before playing first message
+    if (heygenAvatarRef.current && !heygenAvatarRef.current.isReady()) {
+      addLog(`🎭 Waiting for avatar to initialize...`);
+      const maxWaitTime = 10000;
+      const startTime = Date.now();
+      
+      while (!heygenAvatarRef.current.isReady() && (Date.now() - startTime) < maxWaitTime) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      if (heygenAvatarRef.current.isReady()) {
+        addLog(`✅ Avatar ready - starting demo`);
+      } else {
+        addLog(`⚠ Avatar timeout - continuing without lip-sync`);
+      }
+    }
 
     // Play through all messages in sequence
     for (let i = 0; i < scenario.messages.length; i++) {
@@ -531,7 +585,7 @@ export default function Home() {
           const audioBlob = await ttsResponse.blob();
           const audioUrl = URL.createObjectURL(audioBlob);
           
-          // Send audio to HeyGen for lip-sync
+          // Send audio to HeyGen for lip-sync (only for assistant/receptionist)
           if (heygenAvatarRef.current?.speak) {
             try {
               const audioBuffer = await audioBlob.arrayBuffer();

@@ -18,6 +18,7 @@ export interface HeyGenAvatarRef {
   speak: (audioBuffer: ArrayBuffer) => Promise<void>;
   initialize: () => Promise<void>;
   cleanup: () => Promise<void>;
+  isReady: () => boolean;  // Check if avatar is initialized and ready
 }
 
 const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
@@ -187,7 +188,8 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   useImperativeHandle(ref, () => ({
     speak,
     initialize: initializeSession,
-    cleanup
+    cleanup,
+    isReady: () => isInitialized  // Expose initialization state
   }));
 
   // Public method to speak text
