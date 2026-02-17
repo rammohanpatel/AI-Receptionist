@@ -190,8 +190,11 @@ export default function Home() {
               await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Greeting sent to HeyGen for lip-sync');
               
-              // Wait 400ms for HeyGen to start processing
-              await new Promise(resolve => setTimeout(resolve, 1600));
+              // Wait 2500ms for HeyGen to start processing (increased for greeting sync)
+              if(isDemoMode) {
+                  await new Promise(resolve => setTimeout(resolve, 1900));
+                }
+              await new Promise(resolve => setTimeout(resolve, 1500));
               console.log('⏱️ Lip-sync ready, playing greeting audio');
             } catch (error) {
               console.error('Error sending greeting to HeyGen:', error);
