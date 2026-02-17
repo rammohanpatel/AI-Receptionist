@@ -1090,7 +1090,7 @@ export default function Home() {
                 state={conversationState} 
                 isThinking={isProcessing}
                 autoStart={hasStarted}
-                useSandbox={true}  // Enable sandbox mode for testing (disable in production)
+                useSandbox={false}  // Enable sandbox mode for testing (disable in production)
               />
             </div>
 

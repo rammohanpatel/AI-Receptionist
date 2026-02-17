@@ -5,6 +5,7 @@ import { Room, RoomEvent, Track } from 'livekit-client';
 import { motion } from 'framer-motion';
 import { ConversationState } from '@/types';
 import { HeyGenAvatarService, convertAudioToPCM24kHz, streamAudioInChunks } from '@/lib/heygenService';
+import Image from 'next/image';
 
 interface HeyGenAvatarProps {
   state: ConversationState;
@@ -250,7 +251,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
 
   const getStateLabel = () => {
     if (isConnecting) return 'Connecting to avatar...';
-    if (!isInitialized) return 'Click Start to activate avatar';
+    if (!isInitialized) return 'Ready to help';
     
     switch (state) {
       case 'listening':
@@ -303,6 +304,19 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
 
         {/* Video Element */}
         <div className={`relative w-80 h-80 rounded-full overflow-hidden border-4 ${getStateColor()} shadow-2xl bg-gray-900`}>
+          {/* Avatar placeholder image - shown when video not ready */}
+          {!isInitialized && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Image 
+                src="/avatar1.png" 
+                alt="Avatar" 
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
+          
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -311,26 +325,12 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
             muted={false}
           />
           
-          {/* Loading overlay */}
-          {(isConnecting || !isInitialized) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-90">
+          {/* Loading overlay - only spinner, no button */}
+          {isConnecting && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-70">
               <div className="text-center text-white p-6">
-                {isConnecting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37] mx-auto mb-4"></div>
-                    <p className="text-sm">Initializing avatar...</p>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-6xl mb-4">👤</div>
-                    <button
-                      onClick={initializeSession}
-                      className="px-6 py-3 bg-[#D4AF37] text-white rounded-full hover:bg-[#F0C852] transition-all"
-                    >
-                      Activate LiveAvatar
-                    </button>
-                  </>
-                )}
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D4AF37] mx-auto mb-4"></div>
+                <p className="text-sm">Initializing </p>
               </div>
             </div>
           )}
