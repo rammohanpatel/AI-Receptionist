@@ -13,8 +13,13 @@ export class HeyGenAvatarService {
   private isConnected: boolean = false;
   private eventId: number = 0;
   private onStateChangeCallback: ((state: 'connected' | 'connecting' | 'closed' | 'closing') => void) | null = null;
-  private onSpeakStartedCallback: ((eventId: string) => void) | null = null;
+  private onSpeakStartedCallback: ((eventId: string, timestamp: number) => void) | null = null;
   private onSpeakEndedCallback: ((eventId: string) => void) | null = null;
+  
+  // Timing tracking for sync
+  private speechTimestamps: Map<string, number> = new Map();
+  private averageDelay: number = 300; // Start with 300ms estimate
+  private delayHistory: number[] = [];
 
   constructor() {}
 
@@ -67,15 +72,69 @@ export class HeyGenAvatarService {
           this.onStateChangeCallback?.(message.state);
           break;
         case 'agent.speak_started':
-          this.onSpeakStartedCallback?.(message.event_id);
+          const startTime = performance.now();
+          const sendTime = this.speechTimestamps.get(message.event_id);
+          
+          if (sendTime) {
+            // Calculate actual delay
+            const actualDelay = startTime - sendTime;
+            this.delayHistory.push(actualDelay);
+            
+            // Keep only last 10 measurements for adaptive averaging
+            if (this.delayHistory.length > 10) {
+              this.delayHistory.shift();
+            }
+            
+            // Update average delay
+            this.averageDelay = this.delayHistory.reduce((a, b) => a + b, 0) / this.delayHistory.length;
+            
+            console.log(`🎯 Lip sync timing - Delay: ${actualDelay.toFixed(0)}ms, Average: ${this.averageDelay.toFixed(0)}ms`);
+          }
+          
+          this.onSpeakStartedCallback?.(message.event_id, startTime);
           break;
         case 'agent.speak_ended':
           this.onSpeakEndedCallback?.(message.event_id);
+          // Clean up timestamp
+          this.speechTimestamps.delete(message.event_id);
           break;
       }
     } catch (error) {
       console.error('Error parsing HeyGen message:', error);
     }
+  }
+  
+  /**
+   * Get the estimated delay for lip-sync coordination
+   */
+  getEstimatedDelay(): number {
+    return this.averageDelay;
+  }
+  
+  /**
+   * Wait for the next speak_started event (HeyGen generates its own event IDs)
+   */
+  async waitForSpeakStart(timeout: number = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        // Restore original callback on timeout
+        this.onSpeakStartedCallback = originalCallback;
+        reject(new Error('Timeout waiting for speak_started event'));
+      }, timeout);
+      
+      const originalCallback = this.onSpeakStartedCallback;
+      
+      this.onSpeakStartedCallback = (receivedEventId, timestamp) => {
+        // Immediately resolve on ANY speak_started event
+        clearTimeout(timeoutId);
+        this.onSpeakStartedCallback = originalCallback;
+        
+        // Call original callback to maintain functionality
+        originalCallback?.(receivedEventId, timestamp);
+        
+        resolve();
+      };
+    });
   }
 
   /**
@@ -88,6 +147,9 @@ export class HeyGenAvatarService {
     }
 
     const id = eventId || `speak_${this.eventId++}`;
+    
+    // Record timestamp when audio is sent
+    this.speechTimestamps.set(id, performance.now());
     
     const message = {
       type: 'agent.speak',
@@ -185,7 +247,7 @@ export class HeyGenAvatarService {
     this.onStateChangeCallback = callback;
   }
 
-  onSpeakStarted(callback: (eventId: string) => void) {
+  onSpeakStarted(callback: (eventId: string, timestamp: number) => void) {
     this.onSpeakStartedCallback = callback;
   }
 

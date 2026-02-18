@@ -63,17 +63,6 @@ export default function Home() {
     };
   }, []);
 
-  // Ref to handle avatar speech synchronization
-  const avatarSpeechResolverRef = useRef<(() => void) | null>(null);
-
-  const handleAvatarStartSpeaking = () => {
-    console.log('🗣️ Avatar started speaking event received');
-    if (avatarSpeechResolverRef.current) {
-      avatarSpeechResolverRef.current();
-      avatarSpeechResolverRef.current = null;
-    }
-  };
-
   // Auto-scroll demo logs to bottom when new logs are added
   useEffect(() => {
     if (demoLogsRef.current) {
@@ -199,23 +188,12 @@ export default function Home() {
               const audioBuffer = await audioBlob.arrayBuffer();
               // Send to HeyGen first
               console.log('🎭 Greeting sent to HeyGen for lip-sync');
-              const speechPromise = new Promise<void>((resolve) => {
-                avatarSpeechResolverRef.current = resolve;
-                // Fallback timeout in case event never fires (10s)
-                setTimeout(() => {
-                  if (avatarSpeechResolverRef.current) {
-                    console.log('⚠️ Avatar speech event timeout - playing audio anyway');
-                    resolve();
-                    avatarSpeechResolverRef.current = null;
-                  }
-                }, 10000);
-              });
-
+              
               await heygenAvatarRef.current.speak(audioBuffer);
 
-              // Wait for the avatar to actually start speaking
+              // Wait for HeyGen to start speaking (it generates its own event IDs)
               console.log('⏳ Waiting for avatar to start speaking...');
-              await speechPromise;
+              await heygenAvatarRef.current.waitForSpeakStart();
               console.log('🗣️ Avatar started speaking, playing audio now');
             } catch (error) {
               console.error('Error sending greeting to HeyGen:', error);
@@ -294,13 +272,14 @@ export default function Home() {
         if (voiceType === 'female' && heygenAvatarRef.current?.speak) {
           try {
             const audioBuffer = await audioBlob.arrayBuffer();
-            // Send to HeyGen first
+            // Send to HeyGen
             await heygenAvatarRef.current.speak(audioBuffer);
             addLog(`🎭 Audio sent to HeyGen avatar for lip-sync`);
 
-            // Wait 400ms for HeyGen to start processing and rendering lip-sync
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            addLog(`⏱️ Syncing lip-sync with audio...`);
+            // Wait for HeyGen to start speaking (it generates its own event IDs)
+            addLog(`⏳ Waiting for avatar to start speaking...`);
+            await heygenAvatarRef.current.waitForSpeakStart();
+            addLog(`✅ Avatar started - playing audio now`);
           } catch (error) {
             console.error('Error sending audio to HeyGen:', error);
             addLog(`⚠ HeyGen lip-sync error - fallback to audio only`);
@@ -623,13 +602,14 @@ export default function Home() {
           if (heygenAvatarRef.current?.speak) {
             try {
               const audioBuffer = await audioBlob.arrayBuffer();
-              // Send to HeyGen first
+              // Send to HeyGen
               await heygenAvatarRef.current.speak(audioBuffer);
               console.log('🎭 Audio sent to HeyGen avatar for lip-sync');
 
-              // Wait 400ms for HeyGen to start processing and rendering
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              console.log('⏱️ Lip-sync synced, playing audio');
+              // Wait for HeyGen to start speaking (it generates its own event IDs)
+              console.log('⏳ Waiting for avatar to start speaking...');
+              await heygenAvatarRef.current.waitForSpeakStart();
+              console.log('✅ Avatar started speaking, playing audio now');
             } catch (error) {
               console.error('Error sending audio to HeyGen:', error);
             }
@@ -1130,7 +1110,6 @@ export default function Home() {
                 }}
                 state={conversationState}
                 isThinking={isProcessing}
-                onAvatarStartSpeaking={handleAvatarStartSpeaking}
                 autoStart={hasStarted}
                 useSandbox={false}  // Enable sandbox mode for testing (disable in production)
               />

@@ -17,10 +17,12 @@ interface HeyGenAvatarProps {
 }
 
 export interface HeyGenAvatarRef {
-  speak: (audioBuffer: ArrayBuffer) => Promise<void>;
+  speak: (audioBuffer: ArrayBuffer) => Promise<{ eventId: string; estimatedDelay: number }>;
+  waitForSpeakStart: () => Promise<void>;
   initialize: () => Promise<void>;
   cleanup: () => Promise<void>;
   isReady: () => boolean;  // Check if avatar is initialized and ready
+  getEstimatedSyncDelay: () => number; // Get current estimated sync delay
 }
 
 const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
@@ -116,8 +118,8 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
         console.log('🔌 HeyGen WebSocket state:', wsState);
       });
 
-      heygenService.onSpeakStarted((eventId) => {
-        console.log('🗣️ Avatar started speaking:', eventId);
+      heygenService.onSpeakStarted((eventId: string, timestamp: number) => {
+        console.log('🗣️ Avatar started speaking:', eventId, 'at', timestamp);
         setAvatarState('speaking');
         if (onAvatarStartSpeaking) onAvatarStartSpeaking();
       });
@@ -191,16 +193,30 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
     speak,
+    waitForSpeakStart: async () => {
+      if (!heygenServiceRef.current) {
+        throw new Error('HeyGen not initialized');
+      }
+      // Wait for the next speak_started event (HeyGen uses its own event IDs)
+      try {
+        await heygenServiceRef.current.waitForSpeakStart(5000);
+      } catch (error) {
+        console.warn('Timeout waiting for speak_started event, continuing anyway');
+      }
+    },
     initialize: initializeSession,
     cleanup,
-    isReady: () => isInitialized  // Expose initialization state
+    isReady: () => isInitialized,  // Expose initialization state
+    getEstimatedSyncDelay: () => {
+      return heygenServiceRef.current?.getEstimatedDelay() || 300;
+    }
   }));
 
   // Public method to speak text
   const speak = async (audioBuffer: ArrayBuffer) => {
     if (!heygenServiceRef.current || !isInitialized) {
       console.warn('⚠️ HeyGen not initialized, cannot speak');
-      return;
+      throw new Error('HeyGen not initialized');
     }
 
     try {
@@ -209,6 +225,7 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
 
       console.log('📤 Sending audio to HeyGen in chunks...');
       const eventId = `speak_${Date.now()}`;
+      const startTime = performance.now();
 
       // Stream audio in ~1 second chunks
       let chunkCount = 0;
@@ -221,8 +238,19 @@ const HeyGenAvatar = forwardRef<HeyGenAvatarRef, HeyGenAvatarProps>(({
       await heygenServiceRef.current.speakEnd(eventId);
       console.log(`✅ Sent ${chunkCount} audio chunks to HeyGen`);
 
+      // Get estimated delay for caller to use
+      const estimatedDelay = heygenServiceRef.current.getEstimatedDelay();
+      const elapsed = performance.now() - startTime;
+      
+      // Adjust delay based on how long it took to send chunks
+      const adjustedDelay = Math.max(0, estimatedDelay - elapsed);
+      
+      console.log(`🎯 Estimated sync delay: ${estimatedDelay.toFixed(0)}ms, Adjusted: ${adjustedDelay.toFixed(0)}ms`);
+
+      return { eventId, estimatedDelay: adjustedDelay };
     } catch (error) {
       console.error('❌ Error sending audio to HeyGen:', error);
+      throw error;
     }
   };
 
